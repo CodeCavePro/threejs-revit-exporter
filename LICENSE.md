@@ -1,2 +1,2 @@
 
-Copyright (C) CodeCave, PUE 2019 
+2016-2019 Copyright © CodeCave, PUE
