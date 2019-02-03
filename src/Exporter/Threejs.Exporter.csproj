@@ -8,5 +8,9 @@
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <OutputPath>..\..\bin\$(Configuration)</OutputPath>
   </PropertyGroup>
-
+  
+  <ItemGroup>
+    <PackageReference Include="Revit.RevitApi.x64" Version="2019.0.0" />
+    <PackageReference Include="Revit.RevitApiUI.x64" Version="2019.0.0" />
+  </ItemGroup>
 </Project>
