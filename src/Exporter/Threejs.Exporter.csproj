@@ -10,6 +10,7 @@
   </PropertyGroup>
   
   <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
     <PackageReference Include="Revit.RevitApi.x64" Version="2019.0.0" />
     <PackageReference Include="Revit.RevitApiUI.x64" Version="2019.0.0" />
   </ItemGroup>
