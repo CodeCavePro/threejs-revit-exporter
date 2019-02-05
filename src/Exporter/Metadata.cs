@@ -20,8 +20,8 @@ namespace CodeCave.Revit.Threejs.Exporter
         /// <param name="version">The version.</param>
         /// <param name="generator">The generator.</param>
         /// <param name="type">The type.</param>
-        /// <exception cref="ArgumentNullException">version</exception>
-        /// <exception cref="ArgumentException">
+        /// <exception cref="T:System.ArgumentNullException">version</exception>
+        /// <exception cref="T:SystemArgumentException">
         /// Value cannot be null or whitespace. - generator
         /// or
         /// Value cannot be null or whitespace. - type

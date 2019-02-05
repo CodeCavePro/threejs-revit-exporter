@@ -1,5 +1,6 @@
 #region Namespaces
 
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -8,6 +9,7 @@ using System.Windows.Forms;
 using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.Structure;
+using Autodesk.Revit.Exceptions;
 using Autodesk.Revit.UI;
 
 #endregion
@@ -22,6 +24,8 @@ namespace CodeCave.Revit.Threejs.Exporter
     [Regeneration(RegenerationOption.Manual)]
     public class ExternalCommand : IExternalCommand
     {
+        protected UIApplication uiapp;
+
         /// <summary>
         /// Executes the specified Revit command <see cref="ExternalCommand"/>.
         /// The main Execute method (inherited from IExternalCommand) must be public.
@@ -36,134 +40,105 @@ namespace CodeCave.Revit.Threejs.Exporter
             ElementSet elements
         )
         {
-            var uiapp = commandData?.Application;
-            var uidoc = uiapp?.ActiveUIDocument;
-            var app = uiapp?.Application;
+            uiapp = commandData.Application;
 
-            ExportFile(uiapp, @"D:\Downloads\Neptune_Waste_Management_System_-_Silver_Rover_with_Docking_Station_12083.rfa");
-            return Result.Succeeded;
-
-            using (var asd = new OpenFileDialog())
+            using (var asd = new OpenFileDialog() { Multiselect = true, CheckFileExists = true, Filter = "Revit Family Files|*.rfa" })
             {
                 if (asd.ShowDialog() != DialogResult.OK)
                     return Result.Cancelled;
+
+                var projPath = Path.ChangeExtension(Path.GetTempFileName(), ".rvt");
+                var docWrapper = uiapp.Application.NewProjectDocument(UnitSystem.Metric);
+                docWrapper.SaveAs(projPath, new SaveAsOptions { OverwriteExistingFile = true });
+                docWrapper.Close(false);
+                docWrapper = uiapp.OpenAndActivateDocument(projPath).Document;;
+            
+                var viewType3D = docWrapper.CreateTweakedView3D();
+                uiapp.ActiveUIDocument.ActiveView = viewType3D;
 
                 foreach (var rfaPath in asd.FileNames)
                 {
                     if (!File.Exists(rfaPath))
                         continue;
 
-                    ExportFile(uiapp, rfaPath);
+                    ExportFile(docWrapper, rfaPath);
                 }
             }
 
             return Result.Succeeded;
         }
 
-        private void ExportFile(UIApplication uiapp, string rfaFilePath)
+        private void ExportFile(Document docWrapper, string rfaFilePath)
         {
-            var rfaFileName = Path.GetFileName(rfaFilePath);
-            var projPath = Path.Combine(Path.GetTempPath(), Path.ChangeExtension(rfaFileName, ".rvt"));
+            var familyName = Path.GetFileNameWithoutExtension(rfaFilePath);
 
-            Document projTmp;
-            if (!(Debugger.IsAttached && File.Exists(projPath)))
-            {
-                projTmp = uiapp.Application.NewProjectDocument(UnitSystem.Metric);
-                using (var t = new Transaction(projTmp, "Load the family"))
-                {
-                    t.Start();
-                    FamilySymbol familySymbol = null;
-                    foreach (var type in new[] { Path.GetFileNameWithoutExtension(rfaFileName), " " })
-                    {
-                        var familyLoaded = projTmp.LoadFamilySymbol(rfaFilePath, type, out familySymbol);
-                        if (familyLoaded && familySymbol != null)
-                            break;
-                    }
-
-                    if (!familySymbol.IsActive)
-                        familySymbol.Activate();
-
-                    projTmp.Create.NewFamilyInstance(XYZ.Zero, familySymbol, StructuralType.NonStructural);
-                    t.Commit();
-                }
-
-                projTmp.SaveAs(projPath, new SaveAsOptions { OverwriteExistingFile = true });
-                projTmp.Close(false);
-            }
-
-            View3D viewType3D;
-            projTmp = uiapp.OpenAndActivateDocument(projPath).Document;
-            using (var t = new Transaction(projTmp, "Change to 3D view"))
+            Family family;
+            using (var t = new Transaction(docWrapper, $"Load the family '{familyName}'"))
             {
                 t.Start();
-                var viewTypeId = FindViewTypes(projTmp, ViewType.ThreeD).First().Id;
-                viewType3D = View3D.CreateIsometric(projTmp, viewTypeId);
-                viewType3D.get_Parameter( BuiltInParameter.VIEW_DETAIL_LEVEL ).Set( 3 );
-                viewType3D.get_Parameter( BuiltInParameter.MODEL_GRAPHICS_STYLE ).Set( 6 );
+
+                family = new FilteredElementCollector(docWrapper)
+                    .WherePasses(new ElementClassFilter(typeof(Family), false))
+                    .Cast<Family>()
+                    .FirstOrDefault(f => f.Name.Equals(familyName, StringComparison.OrdinalIgnoreCase));
+                
+                if (family == null && !docWrapper.LoadFamily(rfaFilePath, out family))
+                {
+                    throw new System.InvalidOperationException();
+                }
+
                 t.Commit();
             }
 
-            uiapp.ActiveUIDocument.ActiveView = viewType3D;
-
-            var outputFile = new FileInfo(Path.Combine(Path.GetTempPath(), Path.ChangeExtension(rfaFileName, ".json")));
-            var context = new ObjectSceneExportContext(projTmp, outputFile);
-            new CustomExporter(projTmp, context) { ShouldStopOnError = false }.Export(viewType3D);
-        }
-
-         public static IEnumerable<ViewFamilyType> FindViewTypes(Document doc, ViewType viewType)
-        {
-            var ret = new FilteredElementCollector(doc)
-                            .WherePasses(new ElementClassFilter(typeof(ViewFamilyType), false))
-                            .Cast<ViewFamilyType>();
-
-            switch (viewType)
+            foreach (var typElementId in family.GetFamilySymbolIds())
             {
-                case ViewType.AreaPlan:
-                    return ret.Where(e => e.ViewFamily == ViewFamily.AreaPlan);
-                case ViewType.CeilingPlan:
-                    return ret.Where(e => e.ViewFamily == ViewFamily.CeilingPlan);
-                case ViewType.ColumnSchedule:
-                    return ret.Where(e => e.ViewFamily == ViewFamily.GraphicalColumnSchedule); //?
-                case ViewType.CostReport:
-                    return ret.Where(e => e.ViewFamily == ViewFamily.CostReport);
-                case ViewType.Detail:
-                    return ret.Where(e => e.ViewFamily == ViewFamily.Detail);
-                case ViewType.DraftingView:
-                    return ret.Where(e => e.ViewFamily == ViewFamily.Drafting);
-                case ViewType.DrawingSheet:
-                    return ret.Where(e => e.ViewFamily == ViewFamily.Sheet);
-                case ViewType.Elevation:
-                    return ret.Where(e => e.ViewFamily == ViewFamily.Elevation);
-                case ViewType.EngineeringPlan:
-                    return ret.Where(e => e.ViewFamily == ViewFamily.StructuralPlan); //?
-                case ViewType.FloorPlan:
-                    return ret.Where(e => e.ViewFamily == ViewFamily.FloorPlan);
-                //case ViewType.Internal:
-                //    return ret.Where(e => e.ViewFamily == ViewFamily.Internal); //???
-                case ViewType.Legend:
-                    return ret.Where(e => e.ViewFamily == ViewFamily.Legend);
-                case ViewType.LoadsReport:
-                    return ret.Where(e => e.ViewFamily == ViewFamily.LoadsReport);
-                case ViewType.PanelSchedule:
-                    return ret.Where(e => e.ViewFamily == ViewFamily.PanelSchedule);
-                case ViewType.PresureLossReport:
-                    return ret.Where(e => e.ViewFamily == ViewFamily.PressureLossReport);
-                case ViewType.Rendering:
-                    return ret.Where(e => e.ViewFamily == ViewFamily.ImageView); //?
-                //case ViewType.Report:
-                //    return ret.Where(e => e.ViewFamily == ViewFamily.Report); //???
-                case ViewType.Schedule:
-                    return ret.Where(e => e.ViewFamily == ViewFamily.Schedule);
-                case ViewType.Section:
-                    return ret.Where(e => e.ViewFamily == ViewFamily.Section);
-                case ViewType.ThreeD:
-                    return ret.Where(e => e.ViewFamily == ViewFamily.ThreeDimensional);
-                case ViewType.Undefined:
-                    return ret.Where(e => e.ViewFamily == ViewFamily.Invalid);  //?
-                case ViewType.Walkthrough:
-                    return ret.Where(e => e.ViewFamily == ViewFamily.Walkthrough);
-                default:
-                    return ret;
+                FamilyInstance familyInstance;
+                var familySymbol = docWrapper.GetElement(typElementId) as FamilySymbol;
+                if (familySymbol == null)
+                    throw new System.InvalidOperationException();
+
+                var outputFilePath = familySymbol.Name.Equals(familyName, StringComparison.OrdinalIgnoreCase)
+                    ? Path.ChangeExtension(rfaFilePath, ".json")
+                    : Path.ChangeExtension(rfaFilePath, $";{familySymbol.Name}.json");
+
+                if (string.IsNullOrWhiteSpace(outputFilePath) || File.Exists(outputFilePath))
+                    continue;
+
+                using (var t = new Transaction(docWrapper, $"Placing family instance '{familySymbol.Name}'"))
+                {
+                    t.Start();
+                    if (!familySymbol.IsActive)
+                        familySymbol.Activate();
+
+                    familyInstance = docWrapper.Create.NewFamilyInstance(
+                        XYZ.Zero,
+                        familySymbol,
+                        StructuralType.NonStructural
+                    );
+
+                    t.Commit();
+                }
+
+                var context = new ObjectSceneExportContext(docWrapper, new FileInfo(outputFilePath));
+                var exporter = new CustomExporter(docWrapper, context)
+                {
+                    ShouldStopOnError = false
+                };
+                exporter.Export(uiapp.ActiveUIDocument.ActiveView as View3D);
+
+                using (var t = new Transaction(docWrapper, $"Remove family symbol '{familyInstance.Name}'"))
+                {
+                    t.Start();
+                    docWrapper.Delete(familySymbol.Id);
+                    t.Commit();
+                }
+            }
+
+            using (var t = new Transaction(docWrapper, $"Remove family '{family.Name}'"))
+            {
+                t.Start();
+                docWrapper.Delete(family.Id);
+                t.Commit();
             }
         }
     }
