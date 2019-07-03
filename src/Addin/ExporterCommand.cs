@@ -1,10 +1,7 @@
 using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
-using Autodesk.Revit.DB.Structure;
 using Autodesk.Revit.UI;
-using System;
 using System.IO;
-using System.Linq;
 using System.Windows.Forms;
 
 namespace CodeCave.Revit.Threejs.Exporter.Addin
@@ -35,6 +32,8 @@ namespace CodeCave.Revit.Threejs.Exporter.Addin
         {
             uiapp = commandData.Application;
 
+            var exporter = new Exporter(uiapp);
+
             using (var asd = new OpenFileDialog() { Multiselect = true, CheckFileExists = true, Filter = "Revit Family Files|*.rfa" })
             {
                 if (asd.ShowDialog() != DialogResult.OK)
@@ -54,85 +53,11 @@ namespace CodeCave.Revit.Threejs.Exporter.Addin
                     if (!File.Exists(rfaPath))
                         continue;
 
-                    ExportFile(docWrapper, rfaPath);
+                    exporter.ExportFile(docWrapper, rfaPath);
                 }
             }
 
             return Result.Succeeded;
-        }
-
-        private void ExportFile(Document docWrapper, string rfaFilePath)
-        {
-            var familyName = Path.GetFileNameWithoutExtension(rfaFilePath);
-
-            Family family;
-            using (var t = new Transaction(docWrapper, $"Load the family '{familyName}'"))
-            {
-                t.Start();
-
-                family = new FilteredElementCollector(docWrapper)
-                    .WherePasses(new ElementClassFilter(typeof(Family), false))
-                    .Cast<Family>()
-                    .FirstOrDefault(f => f.Name.Equals(familyName, StringComparison.OrdinalIgnoreCase));
-
-                if (family == null && !docWrapper.LoadFamily(rfaFilePath, out family))
-                {
-                    throw new System.InvalidOperationException();
-                }
-
-                t.Commit();
-            }
-
-            foreach (var typElementId in family.GetFamilySymbolIds())
-            {
-                FamilyInstance familyInstance;
-                var familySymbol = docWrapper.GetElement(typElementId) as FamilySymbol;
-                if (familySymbol == null)
-                    throw new System.InvalidOperationException();
-
-                var outputFilePath = familySymbol.Name.Equals(familyName, StringComparison.OrdinalIgnoreCase)
-                    ? Path.ChangeExtension(rfaFilePath, ".json")
-                    : Path.ChangeExtension(rfaFilePath, $";{familySymbol.Name}.json");
-
-                if (string.IsNullOrWhiteSpace(outputFilePath) || File.Exists(outputFilePath))
-                    continue;
-
-                using (var t = new Transaction(docWrapper, $"Placing family instance '{familySymbol.Name}'"))
-                {
-                    t.Start();
-                    if (!familySymbol.IsActive)
-                        familySymbol.Activate();
-
-                    familyInstance = docWrapper.Create.NewFamilyInstance(
-                        XYZ.Zero,
-                        familySymbol,
-                        StructuralType.NonStructural
-                    );
-
-                    t.Commit();
-                }
-
-                var context = new ObjectSceneExportContext(docWrapper, new FileInfo(outputFilePath));
-                var exporter = new CustomExporter(docWrapper, context)
-                {
-                    ShouldStopOnError = false
-                };
-                exporter.Export(uiapp.ActiveUIDocument.ActiveView as View3D);
-
-                using (var t = new Transaction(docWrapper, $"Remove family symbol '{familyInstance.Name}'"))
-                {
-                    t.Start();
-                    docWrapper.Delete(familySymbol.Id);
-                    t.Commit();
-                }
-            }
-
-            using (var t = new Transaction(docWrapper, $"Remove family '{family.Name}'"))
-            {
-                t.Start();
-                docWrapper.Delete(family.Id);
-                t.Commit();
-            }
         }
     }
 }

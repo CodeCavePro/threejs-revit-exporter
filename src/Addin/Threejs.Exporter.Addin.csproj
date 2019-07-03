@@ -118,6 +118,7 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Exporter.cs" />
     <Compile Include="RibbonHelper.cs" />
     <Compile Include="App.cs" />
     <Compile Include="ExternalCommand.cs" />
