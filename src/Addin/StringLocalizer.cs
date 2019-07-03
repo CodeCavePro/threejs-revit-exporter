@@ -4,7 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Resources;
 
-namespace CodeCave.Revit.Threejs.Exporter
+namespace CodeCave.Revit.Threejs.Exporter.Addin
 {
     /// <summary>
     /// In absence of <see cref="T:Microsoft.Extensions.Localization"/> and <see cref="T:Microsoft.Extensions.DependencyInjection"/>
@@ -72,10 +72,10 @@ namespace CodeCave.Revit.Threejs.Exporter
         }
 
         /// <summary>
-        /// Gets the <see cref="string"/> with the specified string.
+        /// Gets the <see cref="System.String"/> with the specified string.
         /// </summary>
         /// <value>
-        /// The <see cref="string"/>.
+        /// The <see cref="System.String"/>.
         /// </value>
         /// <param name="str">The string.</param>
         /// <returns></returns>

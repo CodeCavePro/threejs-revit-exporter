@@ -1,13 +1,13 @@
 #region Namespaces
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.Events;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Events;
-using CodeCave.Revit.Threejs.Exporter.Ribbon;
 
 #if REVIT2017
 using System.Globalization;
@@ -17,7 +17,7 @@ using System.Threading;
 
 #endregion
 
-namespace CodeCave.Revit.Threejs.Exporter
+namespace CodeCave.Revit.Threejs.Exporter.Addin
 {
     /// <summary>
     /// The main application defined in this add-in
@@ -27,39 +27,39 @@ namespace CodeCave.Revit.Threejs.Exporter
     [Regeneration(RegenerationOption.Manual)]
     public class App : IExternalApplication
     {
+        protected UIControlledApplication uiControlledApplication;
+
         /// <summary>
         /// Initializes the <see cref="App"/> class.
         /// </summary>
         static App()
         {
 #if WINFORMS
-            global:: System.Windows.Forms.Application.EnableVisualStyles();
-            global:: System.Windows.Forms.Application.SetCompatibleTextRenderingDefault(false);
+            global::System.Windows.Forms.Application.EnableVisualStyles();
+            global::System.Windows.Forms.Application.SetCompatibleTextRenderingDefault(false);
 #endif
         }
-
-        protected UIControlledApplication uiControlledApplication;
 
         /// <summary>
         /// Called when [startup].
         /// </summary>
-        /// <param name="uiCtrlApp">The UI control application.</param>
+        /// <param name="uiControlledApplication">The UI control application.</param>
         /// <returns></returns>
         /// ReSharper disable once ParameterHidesMember
-        public Result OnStartup(UIControlledApplication uiCtrlApp)
+        public Result OnStartup(UIControlledApplication uiControlledApplication)
         {
-            uiControlledApplication = uiCtrlApp;
+            this.uiControlledApplication = uiControlledApplication;
 
 #if REVIT2017
             // A workaround for a bug with UI culture in Revit 2017.1.1
             // More info here: https://forums.autodesk.com/t5/revit-api-forum/why-the-language-key-switches-currentculture-instead-of/m-p/6843557/highlight/true#M20779
-            var language = uiCtrlApp.ControlledApplication.Language.ToString();
+            var language = uiControlledApplication.ControlledApplication.Language.ToString();
             Thread.CurrentThread.CurrentUICulture = CultureInfo
                                                         .GetCultures(CultureTypes.SpecificCultures)
                                                         .FirstOrDefault(c => language.Contains(c.EnglishName)) ?? Thread.CurrentThread.CurrentUICulture;
 #endif
 
-            RibbonHelper.AddButtons(uiCtrlApp);
+            InitializeRibbon();
 
             try
             {
@@ -78,6 +78,8 @@ namespace CodeCave.Revit.Threejs.Exporter
                 // Closing
                 uiControlledApplication.ControlledApplication.DocumentClosing += OnDocumentClosing;
                 uiControlledApplication.ControlledApplication.DocumentClosed += OnDocumentClosed;
+                // Views
+                uiControlledApplication.ViewActivated += OnViewActivated;
 
                 // TODO: add you code here
             }
@@ -114,6 +116,8 @@ namespace CodeCave.Revit.Threejs.Exporter
                 // Closing
                 uiControlledApplication.ControlledApplication.DocumentClosing -= OnDocumentClosing;
                 uiControlledApplication.ControlledApplication.DocumentClosed -= OnDocumentClosed;
+                // Views
+                uiControlledApplication.ViewActivated -= OnViewActivated;
 
                 // TODO: add you code here
             }
@@ -126,9 +130,33 @@ namespace CodeCave.Revit.Threejs.Exporter
             return Result.Succeeded;
         }
 
+        private void InitializeRibbon()
+        {
+            // TODO declare your ribbon items here
+            var ribbonItems = new List<RibbonHelper.RibbonButton>
+            {
+                new RibbonHelper.RibbonButton<ExporterCommand>                        // One can reference commands defined in other assemblies
+                {
+                    // You could make your ribbon buttons active with no documenent open/active
+                    // Try to create your own class with complex rules on when the given button is active and when it's not
+                    AvailabilityClassName = typeof(ZeroDocStateAvailability).FullName,
+                    Text = StringLocalizer.CallingAssembly["RFA -> JSON"],        // Text displayed on the command, can be stored in the resources
+                    Tooltip = StringLocalizer.CallingAssembly["Export current model to Three.js object JSON"], // Tooltip and long description
+                    IconName = "Resources.threejs-exporter.png",                           // Path to the image, it's relative to the assembly where the command above is defined
+                },
+            };
+
+            RibbonHelper.AddButtons(
+                uiControlledApplication,
+                ribbonItems,
+                ribbonPanelName: StringLocalizer.CallingAssembly["Three.js Exporter"],     // The title of the ribbot panel
+                ribbonTabName: StringLocalizer.CallingAssembly["CodeCave"]       // The title of the ribbon tab
+            );
+        }
+
         /// <summary>
         /// Called when [idling].
-        /// This event is raised only when the Revit UI is in a state 
+        /// This event is raised only when the Revit UI is in a state
         /// when there is no active document.
         /// </summary>
         /// <param name="sender">The sender.</param>
@@ -243,6 +271,17 @@ namespace CodeCave.Revit.Threejs.Exporter
         /// <param name="args">The <see cref="DocumentClosedEventArgs" /> instance containing the event data.</param>
         /// ReSharper disable once MemberCanBeMadeStatic.Local
         private void OnDocumentClosed(object sender, DocumentClosedEventArgs args)
+        {
+            // TODO: add you code here
+        }
+
+        /// <summary>
+        /// Called when [view activated].
+        /// </summary>
+        /// <param name="sender">The sender.</param>
+        /// <param name="e">The <see cref="ViewActivatedEventArgs"/> instance containing the event data.</param>
+        /// <exception cref="NotImplementedException"></exception>
+        private void OnViewActivated(object sender, ViewActivatedEventArgs e)
         {
             // TODO: add you code here
         }

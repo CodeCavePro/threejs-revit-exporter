@@ -1,12 +1,32 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>
-      <!-- Please remove the targets you don't need in order 
-           to exclude Revit versions your add-in won't support
-           use the list below for matching Revit version with .NET target -->
-      net47
-    </TargetFrameworks>
+    <Configurations>Debug;Debug One;Release</Configurations>
+  </PropertyGroup>
+  <PropertyGroup>
+    <!-- Please remove the targets you don't need in order
+      to exclude Revit versions your add-in won't support
+      use the list below for matching Revit version with .NET target
+              2014  |  net40
+              2015  |  net45
+              2016  |  net451
+              2017  |  net452
+              2018  |  net46
+              2019  |  net47
+              2020  |  net471
+      For example you can exclude Revit 2014, by simply removing net40 target belows
+      -->
+    <TargetFrameworks>net471</TargetFrameworks>
+    <RuntimeIdentifiers>win</RuntimeIdentifiers>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug One'">
+    <!-- You could debug just ONE addin version,
+         instead of building all the versions above.
+         Just put ONE target from the list above
+         e.g. if you want to debug ONLY Revit 2019,
+         put net47 below and switch to 'Debug One' configuration
+      -->
+    <TargetFrameworks>net471</TargetFrameworks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(TargetFramework)' == 'net40' ">
     <RevitVersion>2014</RevitVersion>
@@ -26,12 +46,13 @@
   <PropertyGroup Condition=" '$(TargetFramework)' == 'net47' ">
     <RevitVersion>2019</RevitVersion>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)'=='Debug'">
-    <DebugType>full</DebugType>
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net471' ">
+    <RevitVersion>2020</RevitVersion>
   </PropertyGroup>
   <PropertyGroup>
     <!-- Forcibly set platform to 'x64' and ignore architecture-related problems -->
     <PlatformTarget>x64</PlatformTarget>
+
     <ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
     <!-- Force the project to use the legacy debugger engine -->
     <DebugEngines>{351668CC-8477-4fbf-BFE3-5F1006E4DB1F}</DebugEngines>
@@ -46,8 +67,12 @@
     <BuildInParallel>false</BuildInParallel>
     <!-- Override 'OutputPath' to Debug/Release + Revit version -->
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <OutputPath>..\..\bin\$(Configuration)\$(RevitVersion)</OutputPath>
-    <RootOutputPath>$([System.IO.Path]::GetDirectoryName($(OutputPath)))</RootOutputPath>
+    <OutputPath>..\bin\$(Configuration)\$(RevitVersion)</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="$(Configuration.Contains('Debug'))">
+    <DefineConstants>$(DefineConstants);DEBUG</DefineConstants>
+    <DebugType>full</DebugType>
+    <OutputPath>..\..\bin\Debug\$(RevitVersion)</OutputPath>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="PresentationCore" />
@@ -58,22 +83,18 @@
     <Reference Include="System.Windows.Forms" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Revit2014x64-SDK" Version="1.1.0" Condition=" '$(RevitVersion)' == '2014' " />
-    <PackageReference Include="Revit.RevitApi.x64" Version="2015.0.0" Condition=" '$(RevitVersion)' == '2015' " />
-    <PackageReference Include="Revit.RevitApiUI.x64" Version="2015.0.0" Condition=" '$(RevitVersion)' == '2015' " />
-    <PackageReference Include="Revit.RevitApi.x64" Version="2016.0.0" Condition=" '$(RevitVersion)' == '2016' " />
-    <PackageReference Include="Revit.RevitApiUI.x64" Version="2016.0.0" Condition=" '$(RevitVersion)' == '2016' " />
-    <PackageReference Include="Revit.RevitApi.x64" Version="2017.0.0" Condition=" '$(RevitVersion)' == '2017' " />
-    <PackageReference Include="Revit.RevitApiUI.x64" Version="2017.0.0" Condition=" '$(RevitVersion)' == '2017' " />
-    <PackageReference Include="Revit.RevitApi.x64" Version="2018.0.0" Condition=" '$(RevitVersion)' == '2018' " />
-    <PackageReference Include="Revit.RevitApiUI.x64" Version="2018.0.0" Condition=" '$(RevitVersion)' == '2018' " />
-    <PackageReference Include="Revit.RevitApi.x64" Version="2019.0.0" Condition=" '$(RevitVersion)' == '2019' " />
-    <PackageReference Include="Revit.RevitApiUI.x64" Version="2019.0.0" Condition=" '$(RevitVersion)' == '2019' " />
+    <PackageReference Include="Autodesk.Revit.SDK" Version="2014.*" Condition=" '$(RevitVersion)' == '2014' " PrivateAssets="All" />
+    <PackageReference Include="Autodesk.Revit.SDK" Version="2015.*" Condition=" '$(RevitVersion)' == '2015' " PrivateAssets="All" />
+    <PackageReference Include="Autodesk.Revit.SDK" Version="2016.*" Condition=" '$(RevitVersion)' == '2016' " PrivateAssets="All" />
+    <PackageReference Include="Autodesk.Revit.SDK" Version="2017.*" Condition=" '$(RevitVersion)' == '2017' " PrivateAssets="All" />
+    <PackageReference Include="Autodesk.Revit.SDK" Version="2018.*" Condition=" '$(RevitVersion)' == '2018' " PrivateAssets="All" />
+    <PackageReference Include="Autodesk.Revit.SDK" Version="2019.*" Condition=" '$(RevitVersion)' == '2019' " PrivateAssets="All" />
+    <PackageReference Include="Autodesk.Revit.SDK" Version="2020.*" Condition=" '$(RevitVersion)' == '2020' " PrivateAssets="All" />
   </ItemGroup>
   <Target Name="PreventRevitSDKCopyLocal" AfterTargets="ResolveReferences">
     <ItemGroup>
       <!-- A temporary fix for Revit SDK files being copied to the output folder -->
-      <ReferenceCopyLocalPaths Remove="@(ReferenceCopyLocalPaths)" Condition="'%(ReferenceCopyLocalPaths.NuGetPackageId)' == 'Revit2014x64-SDK' Or '%(ReferenceCopyLocalPaths.NuGetPackageId)' == 'Revit.RevitApi.x64' Or '%(ReferenceCopyLocalPaths.NuGetPackageId)' == 'Revit.RevitApiUI.x64'" />
+      <ReferenceCopyLocalPaths Remove="@(ReferenceCopyLocalPaths)" Condition="'%(ReferenceCopyLocalPaths.NuGetPackageId)' == 'Autodesk.Revit.SDK'" />
     </ItemGroup>
   </Target>
   <ItemGroup>
@@ -81,9 +102,6 @@
     <Content Include="AddinManifest.addin">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Content>
-    <EmbeddedResource Include="Resources\threejs-exporter.png">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </EmbeddedResource>
     <!-- Don't use standard resource generator, since it doesn't allow
          one to use strings containing spaces -->
     <EmbeddedResource Include="Properties\Resources.resx">
@@ -92,36 +110,34 @@
     <EmbeddedResource Include="Properties\Resources.ru-RU.resx">
       <Generator />
     </EmbeddedResource>
+    <EmbeddedResource Include="Resources\**\*.*">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
     <Content Include="Properties\launchSettings.json">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Ribbon\RibbonItems.cs" />
-    <Compile Include="Ribbon\RibbonManager.cs" />
+    <Compile Include="RibbonHelper.cs" />
     <Compile Include="App.cs" />
     <Compile Include="ExternalCommand.cs" />
-    <Compile Include="RibbonCommand.cs" />
+    <Compile Include="ExporterCommand.cs" />
     <Compile Include="StringLocalizer.cs" />
+    <Compile Include="ZeroDocStateAvailability.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Exporter\Threejs.Exporter.csproj" />
   </ItemGroup>
   <PropertyGroup>
-    <RootNamespace>CodeCave.Revit.Threejs.Exporter</RootNamespace>
+    <RootNamespace>CodeCave.Revit.Threejs.Exporter.Addin</RootNamespace>
     <AssemblyName>Threejs.Exporter.Addin</AssemblyName>
-    <Authors>Zhmayev Yaroslav</Authors>
-    <PackageId>pro.codecave.revit.exporter.threejs</PackageId>
-    <Company>CodeCave, PUE</Company>
-    <PackageProjectUrl>https://github.com/salaros/revit_threejs_exporter</PackageProjectUrl>
+    <Authors>Your name</Authors>
+    <PackageId>sample.vendor.id.change.it</PackageId>
+    <Company>Acme Ltd</Company>
+    <PackageProjectUrl>http://example.com/test</PackageProjectUrl>
     <Product>The description for your application goes here</Product>
-    <Version>0.0.1</Version>
+    <Version>0.1.0</Version>
     <NeutralLanguage>en</NeutralLanguage>
-    <Description>https://github.com/mrdoob/three.js/wiki/JSON-Object-Scene-format-4</Description>
-    <PackageLicenseUrl>https://raw.githubusercontent.com/salaros/revit_threejs_exporter/master/LICENSE.md</PackageLicenseUrl>
-    <Copyright>2016-2019 Copyright © CodeCave, PUE</Copyright>
-    <RepositoryUrl>https://github.com/salaros/revit_threejs_exporter</RepositoryUrl>
-    <RepositoryType>Git</RepositoryType>
   </PropertyGroup>
   <Target Name="CreateAddinManifest" AfterTargets="AfterBuild">
     <ItemGroup>
@@ -132,7 +148,7 @@
     <ReplaceFileText InputFilename="@(AddinManifest)" OutputFilename="@(AddinManifest)" MatchExpression="&lt;Name&gt;(.*?)&lt;" ReplacementText="&lt;Name&gt;$(Product)&lt;" />
     <ReplaceFileText InputFilename="@(AddinManifest)" OutputFilename="@(AddinManifest)" MatchExpression="&lt;VendorId&gt;(.*?)&lt;" ReplacementText="&lt;VendorId&gt;$(PackageId)&lt;" />
     <ReplaceFileText Condition="'$(Configuration)' == 'Release'" InputFilename="@(AddinManifest)" OutputFilename="@(AddinManifest)" MatchExpression="Assembly&gt;(.*?)&lt;" ReplacementText="Assembly&gt;$(AssemblyName).dll&lt;" />
-    <ReplaceFileText Condition="'$(Configuration)' == 'Debug'" InputFilename="@(AddinManifest)" OutputFilename="@(AddinManifest)" MatchExpression="Assembly&gt;(.*?)&lt;" ReplacementText="Assembly&gt;$([System.IO.Path]::GetFullPath('$(OutputPath)'))$(AssemblyName).dll&lt;" />
+    <ReplaceFileText Condition="$(Configuration.Contains('Debug'))" InputFilename="@(AddinManifest)" OutputFilename="@(AddinManifest)" MatchExpression="Assembly&gt;(.*?)&lt;" ReplacementText="Assembly&gt;$([System.IO.Path]::GetFullPath('$(OutputPath)'))$(AssemblyName).dll&lt;" />
   </Target>
   <UsingTask TaskName="ReplaceFileText" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll">
     <ParameterGroup>
@@ -151,10 +167,11 @@
         ]]></Code>
     </Task>
   </UsingTask>
-  <Target Name="CopyAddinsToAppData" AfterTargets="CreateAddinManifest" Condition="'$(Configuration)' == 'Debug'">
+  <Target Name="CopyAddinsToAppData" AfterTargets="CreateAddinManifest" Condition="$(Configuration.Contains('Debug'))">
     <!-- Copy newly compiled add-in files to AppData folder (before starting the debugger) -->
+    <Message Importance="high" Text="Copying addin file into Revit Addin folder" />
     <ItemGroup>
-      <AddinFiles Include="$(RootOutputPath)\**\*.addin" />
+      <AddinFiles Include="$(OutputPath)\..\**\*.addin" />
     </ItemGroup>
     <Copy SourceFiles="@(AddinFiles)" DestinationFolder="$(AppData)\Autodesk\Revit\Addins\%(RecursiveDir)" SkipUnchangedFiles="true" OverwriteReadOnlyFiles="true" Retries="3" RetryDelayMilliseconds="300" />
   </Target>
