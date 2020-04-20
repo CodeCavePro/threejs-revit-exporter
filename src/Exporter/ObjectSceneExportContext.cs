@@ -1,46 +1,57 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Autodesk.Revit.DB;
-using CodeCave.Threejs.Revit.Exporter.Helpers;
 using CodeCave.Threejs.Entities;
-using Newtonsoft.Json;
+using CodeCave.Threejs.Revit.Exporter.Helpers;
+using CodeCave.Threejs.Revit.Exporter;
 
 namespace CodeCave.Threejs.Revit.Exporter
 {
-    public class ObjectSceneExportContext : IExportContext
+    public sealed class ObjectSceneExportContext : IExportContext, IDisposable
     {
-        protected readonly Document document;
-        protected readonly FileInfo outputFile;
-        protected CurrentSet current;
-        protected bool isCanceled;
-        protected JsonObjectScene outputScene;
-        protected Stack<Transform> transformations;
+        private readonly Document document;
+        private readonly View3D view3D;
+
+        private bool isDisposed; // To detect redundant calls
+
+        private FileInfo outputFile;
+        private CurrentSet current;
+        private bool isCanceled;
+        private Stack<Transform> transformations;
+        private JsonObjectScene outputScene;
 
         /// <summary>
         ///     Initializes a new instance of the <see cref="ObjectSceneExportContext" /> class.
         /// </summary>
         /// <param name="document">The document.</param>
         /// <param name="outputFile">The output file.</param>
-        /// <param name="metadata">The metadata.</param>
-        /// <exception cref="T:System.ArgumentException">document</exception>
-        /// <exception cref="T:System.ArgumentNullException">
+        /// <exception cref="System.ArgumentException">document</exception>
+        /// <exception cref="System.ArgumentNullException">
         ///     document
         ///     or
         ///     outputFile
         /// </exception>
-        public ObjectSceneExportContext(Document document, FileInfo outputFile)
+        public ObjectSceneExportContext(Document document, View3D view3D, FileInfo outputFile)
         {
             if (document?.IsFamilyDocument ?? false)
-                throw new ArgumentException("", nameof(document));
+                throw new ArgumentException("Please make sure you wrap families into a project-type document.", nameof(document));
 
             this.document = document ?? throw new ArgumentNullException(nameof(document));
-            this.outputFile = outputFile ?? throw new ArgumentNullException(nameof(outputFile));
+            this.view3D = view3D;
 
+            Reset(outputFile);
+        }
+
+        public ObjectSceneExportContext Reset(FileInfo outputFile)
+        {
+            this.outputFile = outputFile ?? throw new ArgumentNullException(nameof(outputFile));
             transformations = new Stack<Transform>();
             current = new CurrentSet(null);
+
+            return this;
         }
 
         /// <summary>
@@ -53,12 +64,12 @@ namespace CodeCave.Threejs.Revit.Exporter
             transformations.Push(Transform.Identity);
             outputScene = new JsonObjectScene(
                 generator: $"{nameof(Threejs)}.{nameof(Exporter)} v{typeof(ObjectSceneExportContext).Assembly.GetName().Version}",
-                uuid: document.ActiveView.UniqueId)
+                uuid: (view3D ?? document.ActiveView).UniqueId)
             {
                 Object =
                 {
-                    Name = $"Revit {document.Title}"
-                }
+                    Name = $"Revit {document.Title}",
+                },
             };
 
             return true;
@@ -85,18 +96,18 @@ namespace CodeCave.Threejs.Revit.Exporter
             try
             {
                 var element = document.GetElement(elementId);
-                var uid = element?.UniqueId;
+                var uuid = element?.UniqueId;
 
-                if (element == null || string.IsNullOrWhiteSpace(uid))
+                if (element is null || string.IsNullOrWhiteSpace(uuid))
                     throw new InvalidDataException();
 
-                if (outputScene.Object.HasChild(uid))
+                if (outputScene.Object.HasChild(uuid))
                 {
                     Debug.WriteLine("\r\n*** Duplicate element!\r\n");
                     return;
                 }
 
-                if (null == element.Category)
+                if (element.Category is null)
                 {
                     Debug.WriteLine("\r\n*** Non-category element!\r\n");
                     return;
@@ -152,7 +163,7 @@ namespace CodeCave.Threejs.Revit.Exporter
                     return RenderNodeAction.Skip;
                 }
 
-                if (null == element.Category)
+                if (element.Category is null)
                 {
                     Debug.WriteLine("\r\n*** Non-category element!\r\n");
                     return RenderNodeAction.Skip;
@@ -168,7 +179,7 @@ namespace CodeCave.Threejs.Revit.Exporter
                 current = new CurrentSet(new Object3D("RevitElement", uid)
                 {
                     Name = element.GetDescription(),
-                    Material = current.MaterialUid
+                    Material = current.MaterialUid,
                 });
 
                 var materialUuid = element.Category?.Material?.UniqueId;
@@ -204,7 +215,7 @@ namespace CodeCave.Threejs.Revit.Exporter
                     return;
                 }
 
-                if (null == element.Category)
+                if (element.Category is null)
                 {
                     Debug.WriteLine("\r\n*** Non-category element!\r\n");
                     return;
@@ -268,7 +279,6 @@ namespace CodeCave.Threejs.Revit.Exporter
                                                       + " symbol: " + node.GetSymbolId().IntegerValue);
 
                 // This method marks the start of processing a family instance
-
                 transformations.Push(transformations.Peek().Multiply(
                     node.GetTransform()));
             }
@@ -349,9 +359,10 @@ namespace CodeCave.Threejs.Revit.Exporter
             try
             {
                 var elementId = node.MaterialId;
-                if (ElementId.InvalidElementId != elementId)
+                var materialElement = document.GetElement(node.MaterialId);
+                if (materialElement != null && ElementId.InvalidElementId != elementId)
                 {
-                    SetMaterial(document.GetElement(node.MaterialId).UniqueId);
+                    SetMaterial(materialElement.UniqueId);
                     return;
                 }
 
@@ -403,18 +414,10 @@ namespace CodeCave.Threejs.Revit.Exporter
         public void Finish()
         {
             // Finish populating scene
-
-            var settings = new JsonSerializerSettings
-            {
-                NullValueHandling = NullValueHandling.Ignore,
-                ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
-                Formatting = Formatting.Indented
-            };
-
-            if (outputScene == null)
+            if (outputScene is null)
                 throw new InvalidDataException();
 
-            var outPutJson = JsonConvert.SerializeObject(outputScene, settings);
+            var outPutJson = outputScene.ToString();
             File.WriteAllText(outputFile.FullName, outPutJson);
         }
 
@@ -424,18 +427,36 @@ namespace CodeCave.Threejs.Revit.Exporter
         /// <returns>
         ///     <c>true</c> if the export process is canceled; otherwise, <c>false</c>.
         /// </returns>
-        public bool IsCanceled()
+        public bool IsCanceled() => isCanceled;
+
+        /// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>
+        public void Dispose()
         {
-            return isCanceled;
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>Releases unmanaged and - optionally - managed resources.</summary>
+        /// <param name="disposing">
+        ///   <c>true</c> to release both managed and unmanaged resources; <c>false</c> to release only unmanaged resources.</param>
+        private void Dispose(bool disposing)
+        {
+            if (!isDisposed)
+            {
+                outputScene = null;
+                transformations = null;
+
+                isDisposed = true;
+            }
         }
 
         /// <summary>
         ///     Sets current material.
         /// </summary>
         /// <param name="materialUuid">The material UUID.</param>
-        /// <exception cref="T:System.ArgumentException">Value cannot be null or whitespace. - materialUuid</exception>
-        /// <exception cref="T:System.IO.InvalidDataException"></exception>
-        public void SetMaterial(string materialUuid)
+        /// <exception cref="System.ArgumentException">Value cannot be null or whitespace. - materialUuid</exception>
+        /// <exception cref="InvalidDataException">Material must not be null.</exception>
+        private void SetMaterial(string materialUuid)
         {
             if (string.IsNullOrWhiteSpace(materialUuid))
                 throw new ArgumentException("Value cannot be null or whitespace.", nameof(materialUuid));
@@ -443,8 +464,8 @@ namespace CodeCave.Threejs.Revit.Exporter
             if (!outputScene.HasMaterial(materialUuid))
             {
                 var materialElement = document.GetElement(materialUuid) as Autodesk.Revit.DB.Material;
-                if (materialElement == null)
-                    throw new InvalidDataException();
+                if (materialElement is null)
+                    throw new InvalidDataException("Material must not be null.");
                 outputScene.AddMaterial(materialElement.ToMeshPhong());
             }
 
@@ -460,5 +481,13 @@ namespace CodeCave.Threejs.Revit.Exporter
             // TODO add logging
             isCanceled = true;
         }
+
+#if RVT2016
+        public void OnDaylightPortal(DaylightPortalNode node)
+        {
+            // do nothing, daylight export is not supported
+        }
+#endif
+
     }
 }

@@ -53,7 +53,7 @@ namespace CodeCave.Threejs.Revit.Exporter.Addin
                     if (!File.Exists(rfaPath))
                         continue;
 
-                    exporter.ExportFile(docWrapper, rfaPath);
+                    exporter.ExportFile(docWrapper, viewType3D, rfaPath);
                 }
             }
 

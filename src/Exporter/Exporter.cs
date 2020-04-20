@@ -16,8 +16,14 @@ namespace CodeCave.Threejs.Revit.Exporter
             this.uiapp = uiapp;
         }
 
-        public void ExportFile(Document docWrapper, string rfaFilePath)
+        public void ExportFile(Document docWrapper, View3D view3d, string rfaFilePath)
         {
+            if (docWrapper is null)
+                throw new ArgumentNullException(nameof(docWrapper));
+
+            if (docWrapper.IsFamilyDocument)
+                throw new InvalidOperationException("Only project-type documents could be exported.");
+
             var familyName = Path.GetFileNameWithoutExtension(rfaFilePath);
             var familyExportArgs = new FamilyExportEventArgs { FamilyPath = rfaFilePath };
 
@@ -74,7 +80,7 @@ namespace CodeCave.Threejs.Revit.Exporter
                     t.Commit();
                 }
 
-                var context = new ObjectSceneExportContext(docWrapper, new FileInfo(outputFilePath));
+                var context = new ObjectSceneExportContext(docWrapper, view3d, new FileInfo(outputFilePath));
                 using (var exporter = new CustomExporter(docWrapper, context)
                 {
                     ShouldStopOnError = false,

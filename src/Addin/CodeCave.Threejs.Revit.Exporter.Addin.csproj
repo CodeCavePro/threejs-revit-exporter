@@ -131,7 +131,7 @@
     <Compile Include="ZeroDocStateAvailability.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Exporter\Threejs.Exporter.csproj" />
+    <ProjectReference Include="..\Exporter\CodeCave.Threejs.Revit.Exporter.csproj" />
   </ItemGroup>
   <PropertyGroup>
     <RootNamespace>CodeCave.Threejs.Revit.Exporter.Addin</RootNamespace>

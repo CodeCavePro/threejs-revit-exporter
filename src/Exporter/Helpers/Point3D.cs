@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Diagnostics.CodeAnalysis;
 using Autodesk.Revit.DB;
 
 namespace CodeCave.Threejs.Revit.Exporter.Helpers
@@ -20,6 +21,29 @@ namespace CodeCave.Threejs.Revit.Exporter.Helpers
             Z = z;
         }
 
+
+        /// <summary>
+        /// Performs an implicit conversion from <see cref="Autodesk.Revit.DB.XYZ"/> to <see cref="Point3D"/>.
+        /// </summary>
+        /// <param name="pointXYZ">The XYZ point.</param>
+        /// <returns>
+        /// The result of the conversion.
+        /// </returns>
+        [SuppressMessage("Usage", "CA2225:Operator overloads have named alternates", Justification = "We don't need one.")]
+        public static implicit operator Point3D(XYZ pointXYZ)
+        {
+            if (pointXYZ is null)
+                return null;
+
+            // Flipping X, Y, Z coordinates to match the conventional 3D coordinate system
+            // https://knowledge.autodesk.com/support/recap/troubleshooting/caas/sfdcarticles/sfdcarticles/Switch-or-flip-X-Y-or-Z-axis-orientation-during-data-import.html
+            return new Point3D(
+                -pointXYZ.X.RevitLengthToMillimeters(),
+                pointXYZ.Z.RevitLengthToMillimeters(),
+                pointXYZ.Y.RevitLengthToMillimeters()
+            );
+        }
+
         /// <summary>
         /// Indicates whether the current object is equal to another object of the same type.
         /// </summary>
@@ -29,22 +53,26 @@ namespace CodeCave.Threejs.Revit.Exporter.Helpers
         /// </returns>
         public bool Equals(Point3D other)
         {
-            if (other is null) return false;
-            if (ReferenceEquals(this, other)) return true;
+            if (other is null)
+                return false;
+            if (ReferenceEquals(this, other))
+                return true;
             return X == other.X && Y == other.Y && Z == other.Z;
         }
 
         /// <summary>
-        /// Determines whether the specified <see cref="System.Object" />, is equal to this instance.
+        /// Determines whether the specified <see cref="object" />, is equal to this instance.
         /// </summary>
-        /// <param name="obj">The <see cref="System.Object" /> to compare with this instance.</param>
+        /// <param name="obj">The <see cref="object" /> to compare with this instance.</param>
         /// <returns>
-        ///   <c>true</c> if the specified <see cref="System.Object" /> is equal to this instance; otherwise, <c>false</c>.
+        ///   <c>true</c> if the specified <see cref="object" /> is equal to this instance; otherwise, <c>false</c>.
         /// </returns>
         public override bool Equals(object obj)
         {
-            if (obj is null) return false;
-            if (ReferenceEquals(this, obj)) return true;
+            if (obj is null)
+                return false;
+            if (ReferenceEquals(this, obj))
+                return true;
             return obj.GetType() == GetType() && Equals((Point3D) obj);
         }
 
@@ -52,7 +80,7 @@ namespace CodeCave.Threejs.Revit.Exporter.Helpers
         /// Returns a hash code for this instance.
         /// </summary>
         /// <returns>
-        /// A hash code for this instance, suitable for use in hashing algorithms and data structures like a hash table. 
+        /// A hash code for this instance, suitable for use in hashing algorithms and data structures like a hash table.
         /// </returns>
         public override int GetHashCode()
         {
@@ -76,29 +104,9 @@ namespace CodeCave.Threejs.Revit.Exporter.Helpers
 
             return (deltaAxis == 0)
                 ? 0
-                : 0 < deltaAxis
+                : deltaAxis > 0
                     ? 1
                     : -1;
-        }
-
-        /// <summary>
-        /// Performs an implicit conversion from <see cref="T:Autodesk.Revit.DB.XYZ"/> to <see cref="Point3D"/>.
-        /// </summary>
-        /// <param name="pointXYZ">The XYZ point.</param>
-        /// <returns>
-        /// The result of the conversion.
-        /// </returns>
-        public static implicit operator Point3D(XYZ pointXYZ)
-        {
-            if (pointXYZ == null) throw new ArgumentNullException(nameof(pointXYZ));
-
-            // Flipping X, Y, Z coordinates to match the conventional 3D coordinate system
-            // https://knowledge.autodesk.com/support/recap/troubleshooting/caas/sfdcarticles/sfdcarticles/Switch-or-flip-X-Y-or-Z-axis-orientation-during-data-import.html
-            return new Point3D(
-                -pointXYZ.X.LengthToMillimeters(),
-                pointXYZ.Z.LengthToMillimeters(),
-                pointXYZ.Y.LengthToMillimeters()
-            );
         }
     }
 }

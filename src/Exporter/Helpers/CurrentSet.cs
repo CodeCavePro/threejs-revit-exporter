@@ -1,17 +1,17 @@
-﻿using System;
+using CodeCave.Threejs.Entities;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using CodeCave.Threejs.Entities;
 
 namespace CodeCave.Threejs.Revit.Exporter.Helpers
 {
     public struct CurrentSet
     {
-        public Object3D Element;
-        public string MaterialUid;
-        public Dictionary<string, Object3D> ObjectCache;
-        public Dictionary<string, Geometry> GeometryCache;
-        public Dictionary<string, VerticesOfPoint3D> VerticesCache;
+        internal Object3D Element;
+        internal string MaterialUid;
+        internal Dictionary<string, Object3D> ObjectCache;
+        internal Dictionary<string, Geometry> GeometryCache;
+        internal Dictionary<string, VerticesOfPoint3D> VerticesCache;
 
         public CurrentSet(Object3D element)
         {
@@ -47,7 +47,7 @@ namespace CodeCave.Threejs.Revit.Exporter.Helpers
             }
 
             if (!GeometryCache.ContainsKey(materialUuid))
-                GeometryCache.Add(materialUuid, new Geometry {Uuid = uuidPerMaterial});
+                GeometryCache.Add(materialUuid, new Geometry { Uuid = uuidPerMaterial });
 
             if (!VerticesCache.ContainsKey(materialUuid))
                 VerticesCache.Add(materialUuid, new VerticesOfPoint3D());
