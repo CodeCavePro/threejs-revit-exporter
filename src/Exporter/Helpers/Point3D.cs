@@ -1,7 +1,7 @@
 ﻿using System;
 using Autodesk.Revit.DB;
 
-namespace CodeCave.Revit.Threejs.Exporter.Helpers
+namespace CodeCave.Threejs.Revit.Exporter.Helpers
 {
     public class Point3D : IEquatable<Point3D>, IComparable<Point3D>
     {

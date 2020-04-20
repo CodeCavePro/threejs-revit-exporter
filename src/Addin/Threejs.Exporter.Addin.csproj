@@ -14,6 +14,7 @@
               2018  |  net46
               2019  |  net47
               2020  |  net471
+              2021  |  net48
       For example you can exclude Revit 2014, by simply removing net40 target belows
       -->
     <TargetFrameworks>net471</TargetFrameworks>
@@ -48,6 +49,9 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(TargetFramework)' == 'net471' ">
     <RevitVersion>2020</RevitVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net48' ">
+    <RevitVersion>2021</RevitVersion>
   </PropertyGroup>
   <PropertyGroup>
     <!-- Forcibly set platform to 'x64' and ignore architecture-related problems -->
@@ -90,6 +94,7 @@
     <PackageReference Include="Autodesk.Revit.SDK" Version="2018.*" Condition=" '$(RevitVersion)' == '2018' " PrivateAssets="All" />
     <PackageReference Include="Autodesk.Revit.SDK" Version="2019.*" Condition=" '$(RevitVersion)' == '2019' " PrivateAssets="All" />
     <PackageReference Include="Autodesk.Revit.SDK" Version="2020.*" Condition=" '$(RevitVersion)' == '2020' " PrivateAssets="All" />
+    <PackageReference Include="Autodesk.Revit.SDK" Version="2021.*" Condition=" '$(RevitVersion)' == '2021' " PrivateAssets="All" />
   </ItemGroup>
   <Target Name="PreventRevitSDKCopyLocal" AfterTargets="ResolveReferences">
     <ItemGroup>
@@ -118,7 +123,6 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Exporter.cs" />
     <Compile Include="RibbonHelper.cs" />
     <Compile Include="App.cs" />
     <Compile Include="ExternalCommand.cs" />
@@ -130,7 +134,7 @@
     <ProjectReference Include="..\Exporter\Threejs.Exporter.csproj" />
   </ItemGroup>
   <PropertyGroup>
-    <RootNamespace>CodeCave.Revit.Threejs.Exporter.Addin</RootNamespace>
+    <RootNamespace>CodeCave.Threejs.Revit.Exporter.Addin</RootNamespace>
     <AssemblyName>Threejs.Exporter.Addin</AssemblyName>
     <Authors>Your name</Authors>
     <PackageId>sample.vendor.id.change.it</PackageId>

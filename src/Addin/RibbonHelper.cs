@@ -8,7 +8,7 @@ using System.Windows.Interop;
 using System.Windows.Media.Imaging;
 using Autodesk.Revit.UI;
 
-namespace CodeCave.Revit.Threejs.Exporter.Addin
+namespace CodeCave.Threejs.Revit.Exporter.Addin
 {
     /// <summary>
     /// A set of helpers for Revit Ribbon
@@ -30,7 +30,7 @@ namespace CodeCave.Revit.Threejs.Exporter.Addin
         )
         {
             ribbonPanelName = string.IsNullOrWhiteSpace(ribbonPanelName)
-                ? nameof(CodeCave.Revit.Threejs.Exporter.Addin)
+                ? nameof(CodeCave.Threejs.Revit.Exporter.Addin)
                 : ribbonPanelName;
 
             RibbonPanel ribbonPanel = null;

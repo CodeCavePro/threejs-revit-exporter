@@ -6,7 +6,7 @@ using Autodesk.Revit.UI;
 
 #endregion
 
-namespace CodeCave.Revit.Threejs.Exporter.Addin
+namespace CodeCave.Threejs.Revit.Exporter.Addin
 {
     /// <summary>
     /// A simple example of an external command, usually it's used for batch processing

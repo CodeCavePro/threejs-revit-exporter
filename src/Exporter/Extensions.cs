@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using Autodesk.Revit.DB;
-using CodeCave.Revit.Threejs.Exporter.Materials;
+using CodeCave.Threejs.Entities;
 using Material = Autodesk.Revit.DB.Material;
 
-namespace CodeCave.Revit.Threejs.Exporter
+namespace CodeCave.Threejs.Revit.Exporter
 {
     public static class ElementExtensions
     {

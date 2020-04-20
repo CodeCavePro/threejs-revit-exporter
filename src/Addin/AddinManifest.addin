@@ -2,10 +2,10 @@
 <RevitAddIns>
 
   <AddIn Type="Application">
-    <FullClassName>CodeCave.Revit.Threejs.Exporter.Addin.App</FullClassName>
+    <FullClassName>CodeCave.Threejs.Revit.Exporter.Addin.App</FullClassName>
     <ClientId>f103a0f4-c4cf-4ece-9570-a5243bf30722</ClientId>
     <Name>== Edit in project's properties ==</Name>
-    <Assembly>CodeCave.Revit.Threejs.Exporter.Addin.dll</Assembly>
+    <Assembly>CodeCave.Threejs.Revit.Exporter.Addin.dll</Assembly>
     <VendorId>== Edit in project's properties ==</VendorId>
     <VendorDescription>== Edit (company + authors + website) in project's properties ==</VendorDescription>
   </AddIn>

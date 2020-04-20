@@ -4,36 +4,20 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Autodesk.Revit.DB;
-using CodeCave.Revit.Threejs.Exporter.Helpers;
-using CodeCave.Revit.Threejs.Exporter.Objects;
+using CodeCave.Threejs.Revit.Exporter.Helpers;
+using CodeCave.Threejs.Entities;
 using Newtonsoft.Json;
 
-namespace CodeCave.Revit.Threejs.Exporter
+namespace CodeCave.Threejs.Revit.Exporter
 {
     public class ObjectSceneExportContext : IExportContext
     {
-        public static readonly Metadata DefaultMetadata;
-
         protected readonly Document document;
-        protected readonly Metadata metadata;
         protected readonly FileInfo outputFile;
         protected CurrentSet current;
         protected bool isCanceled;
-        protected ObjectScene outputScene;
+        protected JsonObjectScene outputScene;
         protected Stack<Transform> transformations;
-
-        /// <summary>
-        ///     Initializes the <see cref="ObjectSceneExportContext" /> class.
-        /// </summary>
-        static ObjectSceneExportContext()
-        {
-            // ReSharper disable once RedundantArgumentDefaultValue
-            DefaultMetadata = new Metadata(
-                new Version(4, 3),
-                $"{nameof(Threejs)}.{nameof(Exporter)} v{typeof(ObjectSceneExportContext).Assembly.GetName().Version}",
-                "Object"
-            );
-        }
 
         /// <summary>
         ///     Initializes a new instance of the <see cref="ObjectSceneExportContext" /> class.
@@ -47,14 +31,13 @@ namespace CodeCave.Revit.Threejs.Exporter
         ///     or
         ///     outputFile
         /// </exception>
-        public ObjectSceneExportContext(Document document, FileInfo outputFile, Metadata metadata = null)
+        public ObjectSceneExportContext(Document document, FileInfo outputFile)
         {
             if (document?.IsFamilyDocument ?? false)
                 throw new ArgumentException("", nameof(document));
 
             this.document = document ?? throw new ArgumentNullException(nameof(document));
             this.outputFile = outputFile ?? throw new ArgumentNullException(nameof(outputFile));
-            this.metadata = metadata ?? DefaultMetadata;
 
             transformations = new Stack<Transform>();
             current = new CurrentSet(null);
@@ -68,11 +51,12 @@ namespace CodeCave.Revit.Threejs.Exporter
         public bool Start()
         {
             transformations.Push(Transform.Identity);
-            outputScene = new ObjectScene(DefaultMetadata)
+            outputScene = new JsonObjectScene(
+                generator: $"{nameof(Threejs)}.{nameof(Exporter)} v{typeof(ObjectSceneExportContext).Assembly.GetName().Version}",
+                uuid: document.ActiveView.UniqueId)
             {
                 Object =
                 {
-                    Uuid = document.ActiveView.UniqueId,
                     Name = $"Revit {document.Title}"
                 }
             };
@@ -106,7 +90,7 @@ namespace CodeCave.Revit.Threejs.Exporter
                 if (element == null || string.IsNullOrWhiteSpace(uid))
                     throw new InvalidDataException();
 
-                if (outputScene.Object.HasChildren(uid))
+                if (outputScene.Object.HasChild(uid))
                 {
                     Debug.WriteLine("\r\n*** Duplicate element!\r\n");
                     return;
@@ -125,17 +109,17 @@ namespace CodeCave.Revit.Threejs.Exporter
 
                     foreach (var p in current.VerticesCache[material])
                     {
-                        geo.Data.Vertices.Add(p.X);
-                        geo.Data.Vertices.Add(p.Y);
-                        geo.Data.Vertices.Add(p.Z);
+                        geo.AddVertice(p.X);
+                        geo.AddVertice(p.Y);
+                        geo.AddVertice(p.Z);
                     }
 
                     obj.Geometry = geo.Uuid;
                     outputScene.AddGeometry(geo);
-                    current.Element.AddChildren(obj);
+                    current.Element.AddChild(obj);
                 }
 
-                outputScene.Object.AddChildren(current.Element);
+                outputScene.Object.AddChild(current.Element);
             }
             catch (Exception ex)
             {
@@ -162,7 +146,7 @@ namespace CodeCave.Revit.Threejs.Exporter
                 Debug.WriteLine(
                     $"OnElementBegin: id {elementId.IntegerValue} category {element.Category?.Name} name {element.Name}");
 
-                if (outputScene.Object.HasChildren(uid))
+                if (outputScene.Object.HasChild(uid))
                 {
                     Debug.WriteLine("\r\n*** Duplicate element!\r\n");
                     return RenderNodeAction.Skip;
@@ -181,9 +165,8 @@ namespace CodeCave.Revit.Threejs.Exporter
                     Debug.Print($"{element.GetDescription()} has {idsMaterialGeometry.Count} materials: {materials}");
                 }
 
-                current = new CurrentSet(new Object3D("RevitElement")
+                current = new CurrentSet(new Object3D("RevitElement", uid)
                 {
-                    Uuid = uid,
                     Name = element.GetDescription(),
                     Material = current.MaterialUid
                 });
@@ -215,7 +198,7 @@ namespace CodeCave.Revit.Threejs.Exporter
                 Debug.WriteLine(
                     $"OnElementEnd: id {elementId.IntegerValue} category {element.Category.Name} name {element.Name}");
 
-                if (outputScene.Object.HasChildren(uid))
+                if (outputScene.Object.HasChild(uid))
                 {
                     Debug.WriteLine("\r\n*** Duplicate element!\r\n");
                     return;
@@ -234,17 +217,17 @@ namespace CodeCave.Revit.Threejs.Exporter
 
                     foreach (var p in current.VerticesCache[material])
                     {
-                        geo.Data.Vertices.Add(p.X);
-                        geo.Data.Vertices.Add(p.Y);
-                        geo.Data.Vertices.Add(p.Z);
+                        geo.AddVertice(p.X);
+                        geo.AddVertice(p.Y);
+                        geo.AddVertice(p.Z);
                     }
 
                     obj.Geometry = geo.Uuid;
                     outputScene.AddGeometry(geo);
-                    current.Element.AddChildren(obj);
+                    current.Element.AddChild(obj);
                 }
 
-                outputScene.Object.AddChildren(current.Element);
+                outputScene.Object.AddChild(current.Element);
             }
             catch (Exception ex)
             {
@@ -398,7 +381,7 @@ namespace CodeCave.Revit.Threejs.Exporter
                     .ToArray();
 
                 foreach (var facet in node.GetFacets())
-                    current.GeometryPerMaterial.Data.Faces.AddRange(new[]
+                    current.GeometryPerMaterial.AddFaces(new[]
                     {
                         0,
                         current.VerticesPerMaterial.AddVertex(points[facet.V1]),
@@ -459,7 +442,7 @@ namespace CodeCave.Revit.Threejs.Exporter
 
             if (!outputScene.HasMaterial(materialUuid))
             {
-                var materialElement = document.GetElement(materialUuid) as Material;
+                var materialElement = document.GetElement(materialUuid) as Autodesk.Revit.DB.Material;
                 if (materialElement == null)
                     throw new InvalidDataException();
                 outputScene.AddMaterial(materialElement.ToMeshPhong());

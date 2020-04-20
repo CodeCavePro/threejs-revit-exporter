@@ -5,7 +5,7 @@ using System;
 using System.IO;
 using System.Linq;
 
-namespace CodeCave.Revit.Threejs.Exporter.Addin
+namespace CodeCave.Threejs.Revit.Exporter
 {
     public class Exporter
     {
@@ -75,12 +75,13 @@ namespace CodeCave.Revit.Threejs.Exporter.Addin
                 }
 
                 var context = new ObjectSceneExportContext(docWrapper, new FileInfo(outputFilePath));
-                var exporter = new CustomExporter(docWrapper, context)
+                using (var exporter = new CustomExporter(docWrapper, context)
                 {
-                    ShouldStopOnError = false
-                };
-
-                exporter.Export(uiapp.ActiveUIDocument.ActiveView as View3D);
+                    ShouldStopOnError = false,
+                })
+                {
+                    exporter.Export(uiapp.ActiveUIDocument.ActiveView);
+                }
 
                 this?.OnSymbolExportEnded(familyTypeExportArgs);
 

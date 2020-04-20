@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using CodeCave.Revit.Threejs.Exporter.Geometries;
-using CodeCave.Revit.Threejs.Exporter.Objects;
+using CodeCave.Threejs.Entities;
 
-namespace CodeCave.Revit.Threejs.Exporter.Helpers
+namespace CodeCave.Threejs.Revit.Exporter.Helpers
 {
     public struct CurrentSet
     {
@@ -39,10 +38,9 @@ namespace CodeCave.Revit.Threejs.Exporter.Helpers
             {
                 Debug.Assert(!GeometryCache.ContainsKey(materialUuid), "expected same keys in both");
 
-                ObjectCache.Add(materialUuid, new Object3D("Mesh")
+                ObjectCache.Add(materialUuid, new Object3D("Mesh", uuidPerMaterial)
                 {
                     Geometry = uuidPerMaterial,
-                    Uuid = uuidPerMaterial,
                     Material = MaterialUid,
                     Name = Element.Name,
                 });

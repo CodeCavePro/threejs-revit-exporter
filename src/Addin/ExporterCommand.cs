@@ -4,7 +4,7 @@ using Autodesk.Revit.UI;
 using System.IO;
 using System.Windows.Forms;
 
-namespace CodeCave.Revit.Threejs.Exporter.Addin
+namespace CodeCave.Threejs.Revit.Exporter.Addin
 {
     /// <summary>
     /// A sample ribbon command, demonstrates the possibility to bing Revit commands to ribbon buttons

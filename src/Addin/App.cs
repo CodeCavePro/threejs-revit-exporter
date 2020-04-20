@@ -17,7 +17,7 @@ using System.Threading;
 
 #endregion
 
-namespace CodeCave.Revit.Threejs.Exporter.Addin
+namespace CodeCave.Threejs.Revit.Exporter.Addin
 {
     /// <summary>
     /// The main application defined in this add-in

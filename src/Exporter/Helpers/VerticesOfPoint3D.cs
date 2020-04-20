@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 
-namespace CodeCave.Revit.Threejs.Exporter.Helpers
+namespace CodeCave.Threejs.Revit.Exporter.Helpers
 {
     public class VerticesOfPoint3D : IEnumerable<Point3D>
     {

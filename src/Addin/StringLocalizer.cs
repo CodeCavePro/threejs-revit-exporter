@@ -4,7 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Resources;
 
-namespace CodeCave.Revit.Threejs.Exporter.Addin
+namespace CodeCave.Threejs.Revit.Exporter.Addin
 {
     /// <summary>
     /// In absence of <see cref="T:Microsoft.Extensions.Localization"/> and <see cref="T:Microsoft.Extensions.DependencyInjection"/>
