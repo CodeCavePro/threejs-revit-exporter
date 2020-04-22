@@ -17,9 +17,8 @@ namespace CodeCave.Threejs.Revit.Exporter
                 throw new System.ArgumentNullException(nameof(material));
 
             var materialColor = material.Color.ToInt();
-            var meshPhong = new MeshPhongMaterial
+            var meshPhong = new MeshPhongMaterial(material.UniqueId)
             {
-                Uuid = material.UniqueId,
                 Name = material.Name,
                 Color = materialColor,
                 Ambient = materialColor,
@@ -45,9 +44,8 @@ namespace CodeCave.Threejs.Revit.Exporter
 
             var materialColor = material.Color.ToInt();
             var materialUuid = $@"MaterialNode_{materialColor}_{material.Transparency * 100:0.##}";
-            var meshPhong = new MeshPhongMaterial
+            var meshPhong = new MeshPhongMaterial(materialUuid)
             {
-                Uuid = materialUuid,
                 Color = materialColor,
                 Ambient = materialColor,
                 Emissive = 0,

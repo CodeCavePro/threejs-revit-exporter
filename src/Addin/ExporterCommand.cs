@@ -32,7 +32,7 @@ namespace CodeCave.Threejs.Revit.Exporter.Addin
         {
             uiapp = commandData.Application;
 
-            var exporter = new Exporter(uiapp);
+            var exporter = new FamilyExporter();
 
             using (var asd = new OpenFileDialog() { Multiselect = true, CheckFileExists = true, Filter = "Revit Family Files|*.rfa" })
             {

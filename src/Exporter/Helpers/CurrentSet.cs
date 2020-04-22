@@ -11,7 +11,7 @@ namespace CodeCave.Threejs.Revit.Exporter.Helpers
         internal string MaterialUid;
         internal Dictionary<string, Object3D> ObjectCache;
         internal Dictionary<string, Geometry> GeometryCache;
-        internal Dictionary<string, VerticesOfPoint3D> VerticesCache;
+        internal Dictionary<string, Vector3Collection> VerticesCache;
 
         public CurrentSet(Object3D element)
         {
@@ -19,12 +19,12 @@ namespace CodeCave.Threejs.Revit.Exporter.Helpers
             MaterialUid = string.Empty;
             ObjectCache = new Dictionary<string, Object3D>();
             GeometryCache = new Dictionary<string, Geometry>();
-            VerticesCache = new Dictionary<string, VerticesOfPoint3D>();
+            VerticesCache = new Dictionary<string, Vector3Collection>();
         }
 
         public Geometry GeometryPerMaterial => GeometryCache[MaterialUid];
 
-        public VerticesOfPoint3D VerticesPerMaterial => VerticesCache[MaterialUid];
+        public Vector3Collection VerticesPerMaterial => VerticesCache[MaterialUid];
 
         public void SetMaterial(string materialUuid)
         {
@@ -47,10 +47,10 @@ namespace CodeCave.Threejs.Revit.Exporter.Helpers
             }
 
             if (!GeometryCache.ContainsKey(materialUuid))
-                GeometryCache.Add(materialUuid, new Geometry { Uuid = uuidPerMaterial });
+                GeometryCache.Add(materialUuid, new Geometry(uuidPerMaterial));
 
             if (!VerticesCache.ContainsKey(materialUuid))
-                VerticesCache.Add(materialUuid, new VerticesOfPoint3D());
+                VerticesCache.Add(materialUuid, new Vector3Collection());
         }
     }
 }

@@ -6,7 +6,6 @@ using System.Linq;
 using Autodesk.Revit.DB;
 using CodeCave.Threejs.Entities;
 using CodeCave.Threejs.Revit.Exporter.Helpers;
-using CodeCave.Threejs.Revit.Exporter;
 
 namespace CodeCave.Threejs.Revit.Exporter
 {
@@ -21,7 +20,7 @@ namespace CodeCave.Threejs.Revit.Exporter
         private CurrentSet current;
         private bool isCanceled;
         private Stack<Transform> transformations;
-        private JsonObjectScene outputScene;
+        private ObjectScene outputScene;
 
         /// <summary>
         ///     Initializes a new instance of the <see cref="ObjectSceneExportContext" /> class.
@@ -62,8 +61,8 @@ namespace CodeCave.Threejs.Revit.Exporter
         public bool Start()
         {
             transformations.Push(Transform.Identity);
-            outputScene = new JsonObjectScene(
-                generator: $"{nameof(Threejs)}.{nameof(Exporter)} v{typeof(ObjectSceneExportContext).Assembly.GetName().Version}",
+            outputScene = new ObjectScene(
+                generator: $"{nameof(Threejs)}.{nameof(FamilyExporter)} v{typeof(ObjectSceneExportContext).Assembly.GetName().Version}",
                 uuid: (view3D ?? document.ActiveView).UniqueId)
             {
                 Object =
@@ -120,9 +119,7 @@ namespace CodeCave.Threejs.Revit.Exporter
 
                     foreach (var p in current.VerticesCache[material])
                     {
-                        geo.AddVertice(p.X);
-                        geo.AddVertice(p.Y);
-                        geo.AddVertice(p.Z);
+                        geo.AddPoint(p);
                     }
 
                     obj.Geometry = geo.Uuid;
@@ -228,9 +225,7 @@ namespace CodeCave.Threejs.Revit.Exporter
 
                     foreach (var p in current.VerticesCache[material])
                     {
-                        geo.AddVertice(p.X);
-                        geo.AddVertice(p.Y);
-                        geo.AddVertice(p.Z);
+                        geo.AddPoint(p);
                     }
 
                     obj.Geometry = geo.Uuid;
@@ -392,12 +387,12 @@ namespace CodeCave.Threejs.Revit.Exporter
                     .ToArray();
 
                 foreach (var facet in node.GetFacets())
-                    current.GeometryPerMaterial.AddFaces(new[]
+                    current.GeometryPerMaterial.AddFace(new[]
                     {
                         0,
-                        current.VerticesPerMaterial.AddVertex(points[facet.V1]),
-                        current.VerticesPerMaterial.AddVertex(points[facet.V2]),
-                        current.VerticesPerMaterial.AddVertex(points[facet.V3])
+                        current.VerticesPerMaterial.AddVertex(points[facet.V1].ToVector3()),
+                        current.VerticesPerMaterial.AddVertex(points[facet.V2].ToVector3()),
+                        current.VerticesPerMaterial.AddVertex(points[facet.V3].ToVector3())
                     });
             }
             catch (Exception ex)

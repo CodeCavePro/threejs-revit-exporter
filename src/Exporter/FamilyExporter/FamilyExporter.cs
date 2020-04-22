@@ -7,15 +7,8 @@ using System.Linq;
 
 namespace CodeCave.Threejs.Revit.Exporter
 {
-    public class Exporter
+    public class FamilyExporter
     {
-        protected UIApplication uiapp;
-
-        public Exporter(UIApplication uiapp)
-        {
-            this.uiapp = uiapp;
-        }
-
         public void ExportFile(Document docWrapper, View3D view3d, string rfaFilePath)
         {
             if (docWrapper is null)
@@ -25,9 +18,9 @@ namespace CodeCave.Threejs.Revit.Exporter
                 throw new InvalidOperationException("Only project-type documents could be exported.");
 
             var familyName = Path.GetFileNameWithoutExtension(rfaFilePath);
-            var familyExportArgs = new FamilyExportEventArgs { FamilyPath = rfaFilePath };
+            var familyExportArgs = new FamilyExportEventArgs { FamilyFilePath = rfaFilePath };
 
-            this?.OnSymbolExportStarted(familyExportArgs);
+            this?.OnExportStarted(familyExportArgs);
 
             Family family;
             using (var t = new Transaction(docWrapper, $"Load the family '{familyName}'"))
@@ -54,7 +47,7 @@ namespace CodeCave.Threejs.Revit.Exporter
                 if (familySymbol == null)
                     throw new InvalidOperationException();
 
-                var familyTypeExportArgs = new FamilyExportEventArgs { FamilyPath = rfaFilePath, Symbol = familySymbol?.Name };
+                var familyTypeExportArgs = new FamilySymbolExportEventArgs { FamilyFilePath = rfaFilePath, Symbol = familySymbol?.Name };
 
                 this?.OnSymbolExportStarted(familyTypeExportArgs);
 
@@ -86,7 +79,7 @@ namespace CodeCave.Threejs.Revit.Exporter
                     ShouldStopOnError = false,
                 })
                 {
-                    exporter.Export(uiapp.ActiveUIDocument.ActiveView);
+                    exporter.Export(view3d as View);
                 }
 
                 this?.OnSymbolExportEnded(familyTypeExportArgs);
@@ -111,8 +104,8 @@ namespace CodeCave.Threejs.Revit.Exporter
 
         #region Events
 
-        public delegate void FamilyExportEvent(Exporter exporter, FamilyExportEventArgs args);
-        public delegate void FamilySymbolExportEvent(Exporter exporter, FamilyExportEventArgs args);
+        public delegate void FamilyExportEvent(FamilyExporter exporter, FamilyExportEventArgs args);
+        public delegate void FamilySymbolExportEvent(FamilyExporter exporter, FamilySymbolExportEventArgs args);
 
         private event FamilyExportEvent familyExportStarted, familyExportEnded;
         private event FamilySymbolExportEvent symbolExportStarted, symbolExportEnded;
@@ -153,27 +146,18 @@ namespace CodeCave.Threejs.Revit.Exporter
             handler?.Invoke(this, args);
         }
 
-        protected virtual void OnSymbolExportStarted(FamilyExportEventArgs args)
+        protected virtual void OnSymbolExportStarted(FamilySymbolExportEventArgs args)
         {
-            FamilySymbolExportEvent handler = symbolExportStarted;
+            var handler = symbolExportStarted;
             handler?.Invoke(this, args);
         }
 
-        protected virtual void OnSymbolExportEnded(FamilyExportEventArgs args)
+        protected virtual void OnSymbolExportEnded(FamilySymbolExportEventArgs args)
         {
-            FamilySymbolExportEvent handler = symbolExportEnded;
+            var handler = symbolExportEnded;
             handler?.Invoke(this, args);
         }
 
         #endregion Events
-    }
-
-    public class FamilyExportEventArgs
-    {
-        public string FamilyPath { get; set; }
-
-        public string FamilyName => string.IsNullOrWhiteSpace(FamilyName) ? string.Empty : Path.GetFileNameWithoutExtension(FamilyPath);
-
-        public string Symbol { get; set; }
     }
 }
