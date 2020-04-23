@@ -8,7 +8,7 @@ namespace CodeCave.Threejs.Revit.Exporter
     {
         public string FamilyFilePath { get; set; }
 
-        public string FamilyName => string.IsNullOrWhiteSpace(FamilyName) ? string.Empty : Path.GetFileNameWithoutExtension(FamilyFilePath);
+        public string FamilyName => string.IsNullOrWhiteSpace(FamilyFilePath) ? string.Empty : Path.GetFileNameWithoutExtension(FamilyFilePath);
 
         public string Symbol { get; set; }
 

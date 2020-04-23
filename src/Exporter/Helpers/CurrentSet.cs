@@ -1,14 +1,14 @@
-using CodeCave.Threejs.Entities;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using CodeCave.Threejs.Entities;
 
 namespace CodeCave.Threejs.Revit.Exporter.Helpers
 {
     public struct CurrentSet
     {
-        internal Object3D Element;
         internal string MaterialUid;
+        internal Object3D Element;
         internal Dictionary<string, Object3D> ObjectCache;
         internal Dictionary<string, Geometry> GeometryCache;
         internal Dictionary<string, Vector3Collection> VerticesCache;

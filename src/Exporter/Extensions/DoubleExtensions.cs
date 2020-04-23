@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace CodeCave.Threejs.Revit.Exporter
 {
@@ -11,9 +11,9 @@ namespace CodeCave.Threejs.Revit.Exporter
         /// <returns></returns>
         public static long RevitLengthToMillimeters(this double length)
         {
-            return 1.0e-9 > Math.Abs(length)
+            return Math.Abs(length) < 1.0e-9
                 ? 0
-                : (long) (304.8D * length + 0.5D * Math.Sign(length));
+                : (long)((304.8D * length) + (0.5D * Math.Sign(length)));
         }
     }
 }

@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.Events;
@@ -20,35 +21,35 @@ using System.Threading;
 namespace CodeCave.Threejs.Revit.Exporter.Addin
 {
     /// <summary>
-    /// The main application defined in this add-in
+    /// The main application defined in this add-in.
     /// </summary>
-    /// <seealso cref="T:Autodesk.Revit.UI.IExternalApplication" />
+    /// <seealso cref="IExternalApplication" />
     [Transaction(TransactionMode.Manual)]
     [Regeneration(RegenerationOption.Manual)]
-    public class App : IExternalApplication
+    public sealed class App : IExternalApplication
     {
-        protected UIControlledApplication uiControlledApplication;
+        private UIControlledApplication uiControlledApplication;
 
         /// <summary>
-        /// Initializes the <see cref="App"/> class.
+        /// Initializes static members of the <see cref="App"/> class.
         /// </summary>
         static App()
         {
 #if WINFORMS
-            global::System.Windows.Forms.Application.EnableVisualStyles();
-            global::System.Windows.Forms.Application.SetCompatibleTextRenderingDefault(false);
+            System.Windows.Forms.Application.EnableVisualStyles();
+            System.Windows.Forms.Application.SetCompatibleTextRenderingDefault(false);
 #endif
         }
 
         /// <summary>
         /// Called when [startup].
         /// </summary>
-        /// <param name="uiControlledApplication">The UI control application.</param>
+        /// <param name="application">The UI control application.</param>
         /// <returns></returns>
         /// ReSharper disable once ParameterHidesMember
-        public Result OnStartup(UIControlledApplication uiControlledApplication)
+        public Result OnStartup(UIControlledApplication application)
         {
-            this.uiControlledApplication = uiControlledApplication;
+            uiControlledApplication = application ?? throw new ArgumentNullException(nameof(application));
 
 #if REVIT2017
             // A workaround for a bug with UI culture in Revit 2017.1.1
@@ -66,18 +67,23 @@ namespace CodeCave.Threejs.Revit.Exporter.Addin
                 // Idling and initialization
                 uiControlledApplication.Idling += OnIdling;
                 uiControlledApplication.ControlledApplication.ApplicationInitialized += OnApplicationInitialized;
+
                 // Open / change
                 uiControlledApplication.ControlledApplication.DocumentOpened += OnDocumentOpened;
                 uiControlledApplication.ControlledApplication.DocumentChanged += OnDocumentChanged;
+
                 // Save / SaveAs
                 uiControlledApplication.ControlledApplication.DocumentSaved += OnDocumentSaved;
                 uiControlledApplication.ControlledApplication.DocumentSavedAs += OnDocumentSavedAs;
+
                 // Progress & Failure
                 uiControlledApplication.ControlledApplication.ProgressChanged += OnProgressChanged;
                 uiControlledApplication.ControlledApplication.FailuresProcessing += OnFailuresProcessing;
+
                 // Closing
                 uiControlledApplication.ControlledApplication.DocumentClosing += OnDocumentClosing;
                 uiControlledApplication.ControlledApplication.DocumentClosed += OnDocumentClosed;
+
                 // Views
                 uiControlledApplication.ViewActivated += OnViewActivated;
 
@@ -95,27 +101,34 @@ namespace CodeCave.Threejs.Revit.Exporter.Addin
         /// <summary>
         /// Called when [shutdown].
         /// </summary>
-        /// <param name="uiCtrlApp">The application.</param>
-        /// <returns></returns>
-        public Result OnShutdown(UIControlledApplication uiCtrlApp)
+        /// <param name="application">The application.</param>
+        [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "We check if it's null")]
+        public Result OnShutdown(UIControlledApplication application)
         {
+            uiControlledApplication ??= application ?? throw new ArgumentNullException(nameof(application));
+
             try
             {
                 // Idling and initialization
                 uiControlledApplication.Idling -= OnIdling;
                 uiControlledApplication.ControlledApplication.ApplicationInitialized -= OnApplicationInitialized;
+
                 // Open / change
                 uiControlledApplication.ControlledApplication.DocumentOpened -= OnDocumentOpened;
                 uiControlledApplication.ControlledApplication.DocumentChanged -= OnDocumentChanged;
+
                 // Save / SaveAs
                 uiControlledApplication.ControlledApplication.DocumentSaved -= OnDocumentSaved;
                 uiControlledApplication.ControlledApplication.DocumentSavedAs -= OnDocumentSavedAs;
+
                 // Progress & Failure
                 uiControlledApplication.ControlledApplication.ProgressChanged -= OnProgressChanged;
                 uiControlledApplication.ControlledApplication.FailuresProcessing -= OnFailuresProcessing;
+
                 // Closing
                 uiControlledApplication.ControlledApplication.DocumentClosing -= OnDocumentClosing;
                 uiControlledApplication.ControlledApplication.DocumentClosed -= OnDocumentClosed;
+
                 // Views
                 uiControlledApplication.ViewActivated -= OnViewActivated;
 
@@ -133,9 +146,9 @@ namespace CodeCave.Threejs.Revit.Exporter.Addin
         private void InitializeRibbon()
         {
             // TODO declare your ribbon items here
-            var ribbonItems = new List<RibbonHelper.RibbonButton>
+            var ribbonItems = new List<RibbonButton>
             {
-                new RibbonHelper.RibbonButton<ExporterCommand>                        // One can reference commands defined in other assemblies
+                new RibbonButton<ExporterCommand> // One can reference commands defined in other assemblies
                 {
                     // You could make your ribbon buttons active with no documenent open/active
                     // Try to create your own class with complex rules on when the given button is active and when it's not
@@ -149,9 +162,8 @@ namespace CodeCave.Threejs.Revit.Exporter.Addin
             RibbonHelper.AddButtons(
                 uiControlledApplication,
                 ribbonItems,
-                ribbonPanelName: StringLocalizer.CallingAssembly["Three.js Exporter"],     // The title of the ribbot panel
-                ribbonTabName: StringLocalizer.CallingAssembly["CodeCave"]       // The title of the ribbon tab
-            );
+                ribbonPanelName: StringLocalizer.CallingAssembly["Three.js Exporter"], // The title of the ribbot panel
+                ribbonTabName: StringLocalizer.CallingAssembly[nameof(CodeCave)]); // The title of the ribbon tab
         }
 
         /// <summary>
@@ -160,7 +172,7 @@ namespace CodeCave.Threejs.Revit.Exporter.Addin
         /// when there is no active document.
         /// </summary>
         /// <param name="sender">The sender.</param>
-        /// <param name="args">The <see cref="T:Autodesk.Revit.UI.Events.IdlingEventArgs" /> instance containing the event data.</param>
+        /// <param name="args">The <see cref="Autodesk.Revit.UI.Events.IdlingEventArgs" /> instance containing the event data.</param>
         /// ReSharper disable once MemberCanBeMadeStatic.Local
         private void OnIdling(object sender, IdlingEventArgs args)
         {
@@ -171,7 +183,7 @@ namespace CodeCave.Threejs.Revit.Exporter.Addin
         /// Called when [application initialized].
         /// </summary>
         /// <param name="sender">The sender.</param>
-        /// <param name="args">The <see cref="T:Autodesk.Revit.DB.Events.ApplicationInitializedEventArgs" /> instance containing the event data.</param>
+        /// <param name="args">The <see cref="Autodesk.Revit.DB.Events.ApplicationInitializedEventArgs" /> instance containing the event data.</param>
         /// ReSharper disable once MemberCanBeMadeStatic.Local
         private void OnApplicationInitialized(object sender, ApplicationInitializedEventArgs args)
         {
@@ -182,25 +194,24 @@ namespace CodeCave.Threejs.Revit.Exporter.Addin
         /// Called when [document opened].
         /// </summary>
         /// <param name="sender">The sender.</param>
-        /// <param name="args">The <see cref="DocumentOpenedEventArgs" /> instance containing the event data.</param>
+        /// <param name="args">The <see cref="Autodesk.Revit.DB.Events.DocumentOpenedEventArgs" /> instance containing the event data.</param>
         private void OnDocumentOpened(object sender, DocumentOpenedEventArgs args)
         {
             // TODO: this is just an example, remove or change code below
             var doc = args.Document;
-            Debug.Assert(null != doc, $"Expected a valid Revit {nameof(Document)} instance");
+            Debug.Assert(doc != null, $"Expected a valid Revit {nameof(Document)} instance");
 
             // TODO: this is just an example, remove or change code below
             var app = args.Document?.Application;
             var uiapp = new UIApplication(app);
-            Debug.Assert(null != uiapp, $"Expected a valid Revit {nameof(UIApplication)} instance");
+            Debug.Assert(uiapp != null, $"Expected a valid Revit {nameof(UIApplication)} instance");
         }
 
         /// <summary>
         /// Called when [document changed].
         /// </summary>
         /// <param name="sender">The sender.</param>
-        /// <param name="e">The <see cref="T:Autodesk.Revit.DB.Events.DocumentChangedEventArgs"/> instance containing the event data.</param>
-        /// <exception cref="NotImplementedException"></exception>
+        /// <param name="e">The <see cref="Autodesk.Revit.DB.Events.DocumentChangedEventArgs"/> instance containing the event data.</param>
         /// ReSharper disable once MemberCanBeMadeStatic.Local
         private void OnDocumentChanged(object sender, DocumentChangedEventArgs e)
         {
@@ -211,7 +222,7 @@ namespace CodeCave.Threejs.Revit.Exporter.Addin
         /// Called when [document saved].
         /// </summary>
         /// <param name="sender">The sender.</param>
-        /// <param name="args">The <see cref="DocumentSavedEventArgs" /> instance containing the event data.</param>
+        /// <param name="args">The <see cref="Autodesk.Revit.DB.Events.DocumentSavedEventArgs" /> instance containing the event data.</param>
         /// ReSharper disable once MemberCanBeMadeStatic.Local
         private void OnDocumentSaved(object sender, DocumentSavedEventArgs args)
         {
@@ -222,7 +233,7 @@ namespace CodeCave.Threejs.Revit.Exporter.Addin
         /// Called when [document saved as].
         /// </summary>
         /// <param name="sender">The sender.</param>
-        /// <param name="args">The <see cref="DocumentSavedAsEventArgs" /> instance containing the event data.</param>
+        /// <param name="args">The <see cref="Autodesk.Revit.DB.Events.DocumentSavedAsEventArgs" /> instance containing the event data.</param>
         /// ReSharper disable once MemberCanBeMadeStatic.Local
         private void OnDocumentSavedAs(object sender, DocumentSavedAsEventArgs args)
         {
@@ -233,8 +244,7 @@ namespace CodeCave.Threejs.Revit.Exporter.Addin
         /// Called when [failures processing].
         /// </summary>
         /// <param name="sender">The sender.</param>
-        /// <param name="e">The <see cref="FailuresProcessingEventArgs"/> instance containing the event data.</param>
-        /// <exception cref="NotImplementedException"></exception>
+        /// <param name="e">The <see cref="Autodesk.Revit.DB.Events.FailuresProcessingEventArgs"/> instance containing the event data.</param>
         /// ReSharper disable once MemberCanBeMadeStatic.Local
         private void OnFailuresProcessing(object sender, FailuresProcessingEventArgs e)
         {
@@ -245,8 +255,7 @@ namespace CodeCave.Threejs.Revit.Exporter.Addin
         /// Called when [progress changed].
         /// </summary>
         /// <param name="sender">The sender.</param>
-        /// <param name="progressChangedEventArgs">The <see cref="ProgressChangedEventArgs"/> instance containing the event data.</param>
-        /// <exception cref="NotImplementedException"></exception>
+        /// <param name="progressChangedEventArgs">The <see cref="Autodesk.Revit.DB.Events.ProgressChangedEventArgs"/> instance containing the event data.</param>
         /// ReSharper disable once MemberCanBeMadeStatic.Local
         private void OnProgressChanged(object sender, ProgressChangedEventArgs progressChangedEventArgs)
         {
@@ -257,7 +266,7 @@ namespace CodeCave.Threejs.Revit.Exporter.Addin
         /// Called when [document closing].
         /// </summary>
         /// <param name="sender">The sender.</param>
-        /// <param name="args">The <see cref="DocumentClosingEventArgs" /> instance containing the event data.</param>
+        /// <param name="args">The <see cref="Autodesk.Revit.DB.Events.DocumentClosingEventArgs" /> instance containing the event data.</param>
         /// ReSharper disable once MemberCanBeMadeStatic.Local
         private void OnDocumentClosing(object sender, DocumentClosingEventArgs args)
         {
@@ -268,7 +277,7 @@ namespace CodeCave.Threejs.Revit.Exporter.Addin
         /// Called when [document closed].
         /// </summary>
         /// <param name="sender">The sender.</param>
-        /// <param name="args">The <see cref="DocumentClosedEventArgs" /> instance containing the event data.</param>
+        /// <param name="args">The <see cref="Autodesk.Revit.DB.Events.DocumentClosedEventArgs" /> instance containing the event data.</param>
         /// ReSharper disable once MemberCanBeMadeStatic.Local
         private void OnDocumentClosed(object sender, DocumentClosedEventArgs args)
         {
@@ -279,8 +288,7 @@ namespace CodeCave.Threejs.Revit.Exporter.Addin
         /// Called when [view activated].
         /// </summary>
         /// <param name="sender">The sender.</param>
-        /// <param name="e">The <see cref="ViewActivatedEventArgs"/> instance containing the event data.</param>
-        /// <exception cref="NotImplementedException"></exception>
+        /// <param name="e">The <see cref="Autodesk.Revit.UI.Events.ViewActivatedEventArgs"/> instance containing the event data.</param>
         private void OnViewActivated(object sender, ViewActivatedEventArgs e)
         {
             // TODO: add you code here

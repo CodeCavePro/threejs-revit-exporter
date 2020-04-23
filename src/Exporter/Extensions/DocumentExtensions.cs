@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using Autodesk.Revit.DB;
 
@@ -8,9 +8,16 @@ namespace CodeCave.Threejs.Revit.Exporter
     {
         public static IEnumerable<ViewFamilyType> FindViewTypes(this Document document, ViewType viewType)
         {
-            var result = new FilteredElementCollector(document)
-                            .WherePasses(new ElementClassFilter(typeof(ViewFamilyType), false))
-                            .Cast<ViewFamilyType>();
+            IEnumerable<ViewFamilyType> result;
+
+            using (var collector = new FilteredElementCollector(document))
+            using (var filter = new ElementClassFilter(typeof(ViewFamilyType), false))
+            {
+                result = collector
+                            .WherePasses(filter)
+                            .Cast<ViewFamilyType>()
+                            .ToArray();
+            }
 
             switch (viewType)
             {
@@ -73,8 +80,8 @@ namespace CodeCave.Threejs.Revit.Exporter
 
                 var viewTypeId = FindViewTypes(document, ViewType.ThreeD).FirstOrDefault()?.Id;
                 view3D = View3D.CreateIsometric(document, viewTypeId);
-                view3D.get_Parameter( BuiltInParameter.VIEW_DETAIL_LEVEL ).Set( 3 );
-                view3D.get_Parameter( BuiltInParameter.MODEL_GRAPHICS_STYLE ).Set( 6 );
+                view3D.get_Parameter(BuiltInParameter.VIEW_DETAIL_LEVEL).Set(3);
+                view3D.get_Parameter(BuiltInParameter.MODEL_GRAPHICS_STYLE).Set(6);
 
                 transaction.Commit();
             }

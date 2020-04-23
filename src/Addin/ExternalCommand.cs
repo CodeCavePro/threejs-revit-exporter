@@ -10,13 +10,13 @@ namespace CodeCave.Threejs.Revit.Exporter.Addin
 {
     /// <summary>
     /// A simple example of an external command, usually it's used for batch processing
-    /// files loaded when Revit is idling
+    /// files loaded when Revit is idling.
     /// </summary>
     [Transaction(TransactionMode.Manual)]
     [Regeneration(RegenerationOption.Manual)]
     public class ExternalCommand : IExternalCommand
     {
-        protected UIApplication uiapp;
+        private UIApplication uiapp;
 
         /// <summary>
         /// Executes the specified Revit command <see cref="ExternalCommand"/>.
@@ -29,8 +29,7 @@ namespace CodeCave.Threejs.Revit.Exporter.Addin
         public Result Execute(
             ExternalCommandData commandData,
             ref string message,
-            ElementSet elements
-        )
+            ElementSet elements)
         {
             return Result.Succeeded;
         }

@@ -1,6 +1,4 @@
-﻿using Autodesk.Revit.DB;
-using CodeCave.Threejs.Entities;
-using Material = Autodesk.Revit.DB.Material;
+using Autodesk.Revit.DB;
 
 namespace CodeCave.Threejs.Revit.Exporter
 {

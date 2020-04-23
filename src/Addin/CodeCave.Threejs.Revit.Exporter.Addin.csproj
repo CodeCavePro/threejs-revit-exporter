@@ -123,7 +123,10 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="RibbonHelper.cs" />
+    <Compile Include="GlobalSuppressions.cs" />
+    <Compile Include="Ribbon\RibbonButton.cs" />
+    <Compile Include="Ribbon\RibbonButton{T}.cs" />
+    <Compile Include="Ribbon\RibbonHelper.cs" />
     <Compile Include="App.cs" />
     <Compile Include="ExternalCommand.cs" />
     <Compile Include="ExporterCommand.cs" />

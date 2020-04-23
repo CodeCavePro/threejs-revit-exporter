@@ -16,7 +16,6 @@ namespace CodeCave.Threejs.Revit.Exporter
 
         private bool isDisposed; // To detect redundant calls
 
-        private FileInfo outputFile;
         private CurrentSet current;
         private bool isCanceled;
         private Stack<Transform> transformations;
@@ -26,14 +25,14 @@ namespace CodeCave.Threejs.Revit.Exporter
         ///     Initializes a new instance of the <see cref="ObjectSceneExportContext" /> class.
         /// </summary>
         /// <param name="document">The document.</param>
-        /// <param name="outputFile">The output file.</param>
-        /// <exception cref="System.ArgumentException">document</exception>
+        /// <param name="outputJsonFile">Optional output JSON file.</param>
+        /// <exception cref="System.ArgumentException">document.</exception>
         /// <exception cref="System.ArgumentNullException">
         ///     document
         ///     or
-        ///     outputFile
+        ///     outputFile.
         /// </exception>
-        public ObjectSceneExportContext(Document document, View3D view3D, FileInfo outputFile)
+        public ObjectSceneExportContext(Document document, View3D view3D)
         {
             if (document?.IsFamilyDocument ?? false)
                 throw new ArgumentException("Please make sure you wrap families into a project-type document.", nameof(document));
@@ -41,12 +40,11 @@ namespace CodeCave.Threejs.Revit.Exporter
             this.document = document ?? throw new ArgumentNullException(nameof(document));
             this.view3D = view3D;
 
-            Reset(outputFile);
+            Reset();
         }
 
-        public ObjectSceneExportContext Reset(FileInfo outputFile)
+        public ObjectSceneExportContext Reset()
         {
-            this.outputFile = outputFile ?? throw new ArgumentNullException(nameof(outputFile));
             transformations = new Stack<Transform>();
             current = new CurrentSet(null);
 
@@ -102,13 +100,13 @@ namespace CodeCave.Threejs.Revit.Exporter
 
                 if (outputScene.Object.HasChild(uuid))
                 {
-                    Debug.WriteLine("\r\n*** Duplicate element!\r\n");
+                    Debug.WriteLine("Duplicate element!");
                     return;
                 }
 
                 if (element.Category is null)
                 {
-                    Debug.WriteLine("\r\n*** Non-category element!\r\n");
+                    Debug.WriteLine("Non-category element!");
                     return;
                 }
 
@@ -136,7 +134,7 @@ namespace CodeCave.Threejs.Revit.Exporter
         }
 
         /// <summary>
-        ///     This method marks the beginning of an element to be exported
+        ///     This method marks the beginning of an element to be exported.
         /// </summary>
         /// <param name="elementId">The element identifier.</param>
         /// <returns></returns>
@@ -151,18 +149,17 @@ namespace CodeCave.Threejs.Revit.Exporter
                 if (element == null || string.IsNullOrWhiteSpace(uid))
                     throw new InvalidDataException();
 
-                Debug.WriteLine(
-                    $"OnElementBegin: id {elementId.IntegerValue} category {element.Category?.Name} name {element.Name}");
+                Debug.WriteLine($"OnElementBegin: id {elementId.IntegerValue} category {element.Category?.Name} name {element.Name}");
 
                 if (outputScene.Object.HasChild(uid))
                 {
-                    Debug.WriteLine("\r\n*** Duplicate element!\r\n");
+                    Debug.WriteLine("Duplicate element!");
                     return RenderNodeAction.Skip;
                 }
 
                 if (element.Category is null)
                 {
-                    Debug.WriteLine("\r\n*** Non-category element!\r\n");
+                    Debug.WriteLine("Non-category element!");
                     return RenderNodeAction.Skip;
                 }
 
@@ -193,7 +190,7 @@ namespace CodeCave.Threejs.Revit.Exporter
         }
 
         /// <summary>
-        ///     This method marks the end of an element being exported
+        ///     This method marks the end of an element being exported.
         /// </summary>
         /// <param name="elementId">The element identifier.</param>
         public void OnElementEnd(ElementId elementId)
@@ -203,18 +200,17 @@ namespace CodeCave.Threejs.Revit.Exporter
                 var element = document.GetElement(elementId);
                 var uid = element.UniqueId;
 
-                Debug.WriteLine(
-                    $"OnElementEnd: id {elementId.IntegerValue} category {element.Category.Name} name {element.Name}");
+                Debug.WriteLine($"OnElementEnd: id {elementId.IntegerValue} category {element.Category.Name} name {element.Name}");
 
                 if (outputScene.Object.HasChild(uid))
                 {
-                    Debug.WriteLine("\r\n*** Duplicate element!\r\n");
+                    Debug.WriteLine("Duplicate element!");
                     return;
                 }
 
                 if (element.Category is null)
                 {
-                    Debug.WriteLine("\r\n*** Non-category element!\r\n");
+                    Debug.WriteLine("Non-category element!");
                     return;
                 }
 
@@ -242,7 +238,7 @@ namespace CodeCave.Threejs.Revit.Exporter
         }
 
         /// <summary>
-        ///     This method marks the beginning of a Face to be exported
+        ///     This method marks the beginning of a Face to be exported.
         /// </summary>
         /// <param name="node">The face node.</param>
         /// <returns></returns>
@@ -387,13 +383,15 @@ namespace CodeCave.Threejs.Revit.Exporter
                     .ToArray();
 
                 foreach (var facet in node.GetFacets())
+                {
                     current.GeometryPerMaterial.AddFace(new[]
                     {
                         0,
                         current.VerticesPerMaterial.AddVertex(points[facet.V1].ToVector3()),
                         current.VerticesPerMaterial.AddVertex(points[facet.V2].ToVector3()),
-                        current.VerticesPerMaterial.AddVertex(points[facet.V3].ToVector3())
+                        current.VerticesPerMaterial.AddVertex(points[facet.V3].ToVector3()),
                     });
+                }
             }
             catch (Exception ex)
             {
@@ -411,9 +409,6 @@ namespace CodeCave.Threejs.Revit.Exporter
             // Finish populating scene
             if (outputScene is null)
                 throw new InvalidDataException();
-
-            var outPutJson = outputScene.ToString();
-            File.WriteAllText(outputFile.FullName, outPutJson);
         }
 
         /// <summary>
@@ -431,6 +426,10 @@ namespace CodeCave.Threejs.Revit.Exporter
             GC.SuppressFinalize(this);
         }
 
+        /// <summary>Gets the result of the export.</summary>
+        /// <returns></returns>
+        internal ObjectScene GetResult() => outputScene;
+
         /// <summary>Releases unmanaged and - optionally - managed resources.</summary>
         /// <param name="disposing">
         ///   <c>true</c> to release both managed and unmanaged resources; <c>false</c> to release only unmanaged resources.</param>
@@ -438,8 +437,11 @@ namespace CodeCave.Threejs.Revit.Exporter
         {
             if (!isDisposed)
             {
-                outputScene = null;
-                transformations = null;
+                if (disposing)
+                {
+                    outputScene = null;
+                    transformations = null;
+                }
 
                 isDisposed = true;
             }
@@ -449,7 +451,7 @@ namespace CodeCave.Threejs.Revit.Exporter
         ///     Sets current material.
         /// </summary>
         /// <param name="materialUuid">The material UUID.</param>
-        /// <exception cref="System.ArgumentException">Value cannot be null or whitespace. - materialUuid</exception>
+        /// <exception cref="System.ArgumentException">Value cannot be null or whitespace. - materialUuid.</exception>
         /// <exception cref="InvalidDataException">Material must not be null.</exception>
         private void SetMaterial(string materialUuid)
         {
@@ -474,8 +476,10 @@ namespace CodeCave.Threejs.Revit.Exporter
         private void ProcessException(Exception ex)
         {
             // TODO add logging
+            Debug.WriteLine(ex.Dump());
             isCanceled = true;
         }
+
 
 #if RVT2016
         public void OnDaylightPortal(DaylightPortalNode node)

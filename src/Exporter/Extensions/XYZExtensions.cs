@@ -15,8 +15,7 @@ namespace CodeCave.Threejs.Revit.Exporter
             return new Vector3(
                 -pointXYZ.X.RevitLengthToMillimeters(),
                 pointXYZ.Z.RevitLengthToMillimeters(),
-                pointXYZ.Y.RevitLengthToMillimeters()
-            );
+                pointXYZ.Y.RevitLengthToMillimeters());
         }
     }
 }

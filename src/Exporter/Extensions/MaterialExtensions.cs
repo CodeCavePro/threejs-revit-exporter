@@ -53,7 +53,7 @@ namespace CodeCave.Threejs.Revit.Exporter
                 Shininess = 1,
                 Opacity = (100D - material.Transparency) / 100,
                 Transparent = material.Transparency > 0,
-                Wireframe = false
+                Wireframe = false,
             };
             return meshPhong;
         }
