@@ -7,9 +7,16 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CodeCave.Threejs.Revit.Expo
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{5896B7AE-29C3-4BC8-A40F-88C3F1DF4E4A}"
 	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
 		.gitignore = .gitignore
+		azure-pipelines.yml = azure-pipelines.yml
+		CodeAnalysis.ruleset = CodeAnalysis.ruleset
+		Directory.Build.props = Directory.Build.props
+		Directory.Build.targets = Directory.Build.targets
 		LICENSE = LICENSE
+		NuGet.config = NuGet.config
 		README.md = README.md
+		stylecop.json = stylecop.json
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CodeCave.Threejs.Revit.Exporter", "src\Exporter\CodeCave.Threejs.Revit.Exporter.csproj", "{965B4C84-EFF9-4CBC-8904-A3AF813E404D}"
