@@ -1,10 +1,21 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
 
     <!-- Override 'OutputPath' to Debug/Release + Revit version -->
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <Version>0.1.0</Version>
+    <FileVersion>0.1.0</FileVersion>
+    <AssemblyVersion>0.1.0</AssemblyVersion>
+    <RepositoryType>git</RepositoryType>
+    <PackageProjectUrl>https://github.com/CodeCavePro/threejs-revit-exporter.git</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/CodeCavePro/threejs-revit-exporter.git</RepositoryUrl>
+    <PackageTags>nuget, package, library, three.js, revit, export</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
