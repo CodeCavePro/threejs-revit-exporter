@@ -120,7 +120,7 @@ namespace CodeCave.Threejs.Revit.Exporter
                         geo.AddPoint(p);
                     }
 
-                    obj.Geometry = geo.Uuid;
+                    obj.GeometryUuid = geo.Uuid;
                     outputScene.AddGeometry(geo);
                     current.Element.AddChild(obj);
                 }
@@ -173,7 +173,7 @@ namespace CodeCave.Threejs.Revit.Exporter
                 current = new CurrentSet(new Object3D("RevitElement", uid)
                 {
                     Name = element.GetDescription(),
-                    Material = current.MaterialUid,
+                    MaterialUuid = current.MaterialUid,
                 });
 
                 var materialUuid = element.Category?.Material?.UniqueId;
@@ -224,7 +224,7 @@ namespace CodeCave.Threejs.Revit.Exporter
                         geo.AddPoint(p);
                     }
 
-                    obj.Geometry = geo.Uuid;
+                    obj.GeometryUuid = geo.Uuid;
                     outputScene.AddGeometry(geo);
                     current.Element.AddChild(obj);
                 }

@@ -40,8 +40,8 @@ namespace CodeCave.Threejs.Revit.Exporter.Helpers
 
                 ObjectCache.Add(materialUuid, new Object3D("Mesh", uuidPerMaterial)
                 {
-                    Geometry = uuidPerMaterial,
-                    Material = MaterialUid,
+                    GeometryUuid = uuidPerMaterial,
+                    MaterialUuid = MaterialUid,
                     Name = Element.Name,
                 });
             }
