@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configurations>Debug;Debug One;Release</Configurations>
+    <Configurations>Debug;Release</Configurations>
   </PropertyGroup>
   <PropertyGroup>
     <!-- Please remove the targets you don't need in order
@@ -20,7 +20,7 @@
     <TargetFrameworks>net471</TargetFrameworks>
     <RuntimeIdentifiers>win</RuntimeIdentifiers>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)' == 'Debug One'">
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
     <!-- You could debug just ONE addin version,
          instead of building all the versions above.
          Just put ONE target from the list above
