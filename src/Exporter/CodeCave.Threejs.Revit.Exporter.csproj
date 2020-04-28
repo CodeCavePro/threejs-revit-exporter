@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
@@ -19,10 +19,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CodeCave.Threejs.Entities" Version="0.3.3" />
+    <PackageReference Include="CodeCave.Threejs.Entities" Version="0.5.2" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="Autodesk.Revit.SDK" Version="2020.*">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
   </ItemGroup>
+
 </Project>

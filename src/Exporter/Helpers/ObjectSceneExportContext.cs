@@ -141,10 +141,15 @@ namespace CodeCave.Threejs.Revit.Exporter
         /// <exception cref="InvalidDataException"></exception>
         public RenderNodeAction OnElementBegin(ElementId elementId)
         {
+            if (elementId is null)
+                throw new ArgumentNullException(nameof(elementId));
+
             try
             {
                 var element = document.GetElement(elementId);
                 var uid = element?.UniqueId;
+                if (!(element is FamilyInstance))
+                    return RenderNodeAction.Skip;
 
                 if (element == null || string.IsNullOrWhiteSpace(uid))
                     throw new InvalidDataException();
@@ -403,12 +408,13 @@ namespace CodeCave.Threejs.Revit.Exporter
         ///     This method is called at the very end of the export process, after all entities were processed (or after the
         ///     process was canceled).
         /// </summary>
-        /// <exception cref="InvalidDataException"></exception>
         public void Finish()
         {
             // Finish populating scene
             if (outputScene is null)
-                throw new InvalidDataException();
+                throw new InvalidOperationException("The export cannot be finalized if the scene is null");
+
+            outputScene.Optimize(true);
         }
 
         /// <summary>
