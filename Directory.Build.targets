@@ -14,6 +14,9 @@
     <SolutionDir Condition="'$(SolutionDir)'==''">$(MSBuildThisFileDirectory)</SolutionDir>
     <CodeAnalysisRuleSet>$(SolutionDir)\CodeAnalysis.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
+  <PropertyGroup>
+    <IsTestProject Condition="'$(IsTestProject)' == ''">$(MSBuildProjectName.Contains('.Test'))</IsTestProject>
+  </PropertyGroup>
 
   <!-- StyleCop Analyzer-related configuration -->
   <PropertyGroup Condition="Exists('$(SolutionDir)\CodeAnalysis.ruleset') And '$(BuildingInsideVisualStudio)' == 'true'">
@@ -30,7 +33,7 @@
 
   <!-- FxCop Analyzer-related configuration -->
   <ItemGroup Condition="'$(BuildingInsideVisualStudio)' == 'true'">
-    <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="3.0.0-beta*">
+    <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="3.0.0*">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
@@ -47,6 +50,14 @@
   <!-- Sonar Analyzer-related configuration -->
   <ItemGroup Condition="'$(BuildingInsideVisualStudio)' == 'true'">
     <PackageReference Include="SonarAnalyzer.CSharp" Version="8.6.*">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <!-- Code Analyzers for projects using xUnit.net that help find and fix frequent issues when writing tests -->
+  <ItemGroup Condition="'$(BuildingInsideVisualStudio)' == 'true' And '$(IsTestProject)' == 'true'">
+    <PackageReference Include="xunit.analyzers" Version="0.10.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
