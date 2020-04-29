@@ -148,11 +148,11 @@ namespace CodeCave.Threejs.Revit.Exporter
             {
                 var element = document.GetElement(elementId);
                 var uid = element?.UniqueId;
-                if (!(element is FamilyInstance))
-                    return RenderNodeAction.Skip;
-
-                if (element == null || string.IsNullOrWhiteSpace(uid))
+                if (element is null || string.IsNullOrWhiteSpace(uid))
                     throw new InvalidDataException();
+
+                if (!(element is FamilyInstance))
+                    return RenderNodeAction.Skip; // simply skip non-FamilyInstance elements
 
                 Debug.WriteLine($"OnElementBegin: id {elementId.IntegerValue} category {element.Category?.Name} name {element.Name}");
 
@@ -200,10 +200,18 @@ namespace CodeCave.Threejs.Revit.Exporter
         /// <param name="elementId">The element identifier.</param>
         public void OnElementEnd(ElementId elementId)
         {
+            if (elementId is null)
+                throw new ArgumentNullException(nameof(elementId));
+
             try
             {
                 var element = document.GetElement(elementId);
-                var uid = element.UniqueId;
+                var uid = element?.UniqueId;
+                if (element is null || string.IsNullOrWhiteSpace(uid))
+                    throw new InvalidDataException();
+
+                if (!(element is FamilyInstance))
+                    return; // simply skip non-FamilyInstance elements
 
                 Debug.WriteLine($"OnElementEnd: id {elementId.IntegerValue} category {element.Category.Name} name {element.Name}");
 
