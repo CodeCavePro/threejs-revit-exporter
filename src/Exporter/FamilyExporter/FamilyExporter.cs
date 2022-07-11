@@ -112,15 +112,18 @@ namespace CodeCave.Threejs.Revit.Exporter
                 }
 
                 var context = new ObjectSceneExportContext(docWrapper, view3d);
-                using (var exporter = new ObjectSceneExporter(docWrapper, context)
+                using var exporter = new ObjectSceneExporter(docWrapper, context)
                 {
                     ShouldStopOnError = false,
-                })
+                };
+
+                if (!exporter.TryExport(view3d, out var objectScene))
                 {
-                    var objectScene = exporter.Export(view3d as View);
-                    var objectSceneJson = objectScene.ToString();
-                    File.WriteAllText(outputFilePath, objectSceneJson);
+                    throw new InvalidOperationException($"Failed to export object scene to {outputFilePath}");
                 }
+
+                var objectSceneJson = objectScene.ToString();
+                File.WriteAllText(outputFilePath, objectSceneJson);
 
                 this?.OnSymbolExportEnded(familyTypeExportArgs);
 
