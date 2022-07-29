@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using Autodesk.Revit.DB;
 using CodeCave.Threejs.Entities;
 
@@ -18,13 +19,29 @@ namespace CodeCave.Threejs.Revit.Exporter
         /// <summary>Exports the specified view to export.</summary>
         /// <param name="viewToExport">The view to export.</param>
         /// <returns></returns>
-        public ObjectScene ExportView(View viewToExport)
+        /// <param name="outputJsonFilePath">The output JSON file path.</param>
+        /// <exception cref="System.ArgumentException">Please provide a valid output file path. - outputJsonFilePath.</exception>
+        public bool Export(View3D viewToExport, string outputJsonFilePath)
         {
             if (viewToExport is null)
             {
                 throw new ArgumentNullException(nameof(viewToExport));
             }
 
+            if (string.IsNullOrWhiteSpace(outputJsonFilePath))
+            {
+                throw new ArgumentException("Please provide a valid output file path.", nameof(outputJsonFilePath));
+            }
+
+            _ = new FileInfo(outputJsonFilePath); // throws an error if file path is invalid
+
+            if (!TryExport(viewToExport, out var outputScene, throwException: true))
+                return false;
+            {
+            }
+
+            File.WriteAllText(outputJsonFilePath, outputScene.ToString());
+            return File.Exists(outputJsonFilePath);
 #if NET472 || NET48_OR_GREATER
             Export(viewToExport);
 #else
@@ -35,20 +52,32 @@ namespace CodeCave.Threejs.Revit.Exporter
 
         /// <summary>Exports the specified view to export.</summary>
         /// <param name="viewToExport">The view to export.</param>
-        /// <param name="outputJsonFilePath">The output json file path.</param>
-        /// <returns></returns>
-        /// <exception cref="System.ArgumentException">Please provide a valid output file path. - outputJsonFilePath.</exception>
-        public bool Export(View viewToExport, string outputJsonFilePath)
+        /// <param name="outputScene">The output scene.</param>
+        /// <param name="throwException">Throw or not throw exception, default is true.</param>
+        public bool TryExport(View3D viewToExport, out ObjectScene outputScene, bool throwException = false)
         {
-            if (string.IsNullOrEmpty(outputJsonFilePath))
-                throw new ArgumentException("Please provide a valid output file path.", nameof(outputJsonFilePath));
+            outputScene = null;
 
-            _ = new FileInfo(outputJsonFilePath); // throws an error if file path is invalid
-            var outputScene = ExportView(viewToExport);
-            var outPutJson = outputScene.ToString();
+            try
+            {
+                if (viewToExport is null)
+                {
+                    throw new ArgumentNullException(nameof(viewToExport));
+                }
 
-            File.WriteAllText(outputJsonFilePath, outPutJson);
-            return File.Exists(outPutJson);
+                Export(viewToExport);
+
+                outputScene = this.context.GetResult();
+                return outputScene?.Object?.Children?.Any() ?? false;
+            }
+            catch (Exception) when (!throwException)
+            {
+                return false;
+            }
+            catch
+            {
+                throw;
+            }
         }
     }
 }
