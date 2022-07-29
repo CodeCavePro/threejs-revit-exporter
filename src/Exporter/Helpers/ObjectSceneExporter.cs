@@ -18,9 +18,18 @@ namespace CodeCave.Threejs.Revit.Exporter
         /// <summary>Exports the specified view to export.</summary>
         /// <param name="viewToExport">The view to export.</param>
         /// <returns></returns>
-        public new ObjectScene Export(View viewToExport)
+        public ObjectScene ExportView(View viewToExport)
         {
-            base.Export(viewToExport);
+            if (viewToExport is null)
+            {
+                throw new ArgumentNullException(nameof(viewToExport));
+            }
+
+#if NET472 || NET48_OR_GREATER
+            Export(viewToExport);
+#else
+            Export(new System.Collections.Generic.List<ElementId> { viewToExport.Id });
+#endif
             return context.GetResult();
         }
 
@@ -35,7 +44,7 @@ namespace CodeCave.Threejs.Revit.Exporter
                 throw new ArgumentException("Please provide a valid output file path.", nameof(outputJsonFilePath));
 
             _ = new FileInfo(outputJsonFilePath); // throws an error if file path is invalid
-            var outputScene = Export(viewToExport);
+            var outputScene = ExportView(viewToExport);
             var outPutJson = outputScene.ToString();
 
             File.WriteAllText(outputJsonFilePath, outPutJson);

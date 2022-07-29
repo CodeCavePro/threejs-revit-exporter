@@ -148,13 +148,23 @@ namespace CodeCave.Threejs.Revit.Exporter.Addin
             // TODO declare your ribbon items here
             var ribbonItems = new List<RibbonButton>
             {
-                new RibbonButton<ExporterCommand> // One can reference commands defined in other assemblies
+                new RibbonButton<RfaExporterCommand> // One can reference commands defined in other assemblies
                 {
                     // You could make your ribbon buttons active with no documenent open/active
                     // Try to create your own class with complex rules on when the given button is active and when it's not
                     AvailabilityClassName = typeof(ZeroDocStateAvailability).FullName,
                     Text = StringLocalizer.CallingAssembly["RFA -> JSON"],        // Text displayed on the command, can be stored in the resources
-                    Tooltip = StringLocalizer.CallingAssembly["Export current model to Three.js object JSON"], // Tooltip and long description
+                    Tooltip = StringLocalizer.CallingAssembly["Export family(ies) to Three.js object JSON"], // Tooltip and long description
+                    IconName = "Resources.threejs-exporter.png",                           // Path to the image, it's relative to the assembly where the command above is defined
+                },
+
+                new RibbonButton<RvtExporterCommand> // One can reference commands defined in other assemblies
+                {
+                    // You could make your ribbon buttons active with no documenent open/active
+                    // Try to create your own class with complex rules on when the given button is active and when it's not
+                    AvailabilityClassName = typeof(ZeroDocStateAvailability).FullName,
+                    Text = StringLocalizer.CallingAssembly["RVT -> JSON"],        // Text displayed on the command, can be stored in the resources
+                    Tooltip = StringLocalizer.CallingAssembly["Export a project to Three.js object JSON"], // Tooltip and long description
                     IconName = "Resources.threejs-exporter.png",                           // Path to the image, it's relative to the assembly where the command above is defined
                 },
             };

@@ -17,7 +17,7 @@
               2021  |  net48
       For example you can exclude Revit 2014, by simply removing net40 target belows
       -->
-    <TargetFrameworks>net48;net471;net47;net46</TargetFrameworks>
+    <TargetFrameworks>net48;net471;net47;net461</TargetFrameworks>
     <RuntimeIdentifiers>win</RuntimeIdentifiers>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
@@ -27,7 +27,7 @@
          e.g. if you want to debug ONLY Revit 2019,
          put net47 below and switch to 'Debug One' configuration
       -->
-    <TargetFrameworks>net48</TargetFrameworks>
+    <TargetFrameworks>net471</TargetFrameworks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(TargetFramework)' == 'net40' ">
     <RevitVersion>2014</RevitVersion>
@@ -41,7 +41,7 @@
   <PropertyGroup Condition=" '$(TargetFramework)' == 'net452' ">
     <RevitVersion>2017</RevitVersion>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'net46' ">
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net461' ">
     <RevitVersion>2018</RevitVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(TargetFramework)' == 'net47' ">
@@ -79,6 +79,9 @@
     <OutputPath>..\..\bin\Debug\$(RevitVersion)</OutputPath>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="GS.Revit.GltfExporterAPI">
+      <HintPath>C:\ProgramData\Autodesk\ApplicationPlugins\glTF ExporterAPI.bundle\Contents\2021\glTF Exporter + API\GS.Revit.GltfExporterAPI.dll</HintPath>
+    </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
     <Reference Include="WindowsBase" />
@@ -123,13 +126,14 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="RvtExporterCommand.cs" />
     <Compile Include="GlobalSuppressions.cs" />
+    <Compile Include="RfaExporterCommand.cs" />
     <Compile Include="Ribbon\RibbonButton.cs" />
     <Compile Include="Ribbon\RibbonButton{T}.cs" />
     <Compile Include="Ribbon\RibbonHelper.cs" />
     <Compile Include="App.cs" />
     <Compile Include="ExternalCommand.cs" />
-    <Compile Include="ExporterCommand.cs" />
     <Compile Include="StringLocalizer.cs" />
     <Compile Include="ZeroDocStateAvailability.cs" />
   </ItemGroup>
@@ -139,13 +143,14 @@
   <PropertyGroup>
     <RootNamespace>CodeCave.Threejs.Revit.Exporter.Addin</RootNamespace>
     <AssemblyName>Threejs.Exporter.Addin</AssemblyName>
-    <Authors>Your name</Authors>
-    <PackageId>sample.vendor.id.change.it</PackageId>
-    <Company>Acme Ltd</Company>
-    <PackageProjectUrl>http://example.com/test</PackageProjectUrl>
-    <Product>The description for your application goes here</Product>
+    <Authors>Yaroslav Zhmayev</Authors>
+    <PackageId>codecave.threejs.exporter</PackageId>
+    <Company>CODECAVE LLC</Company>
+    <PackageProjectUrl>http://codecave.pro</PackageProjectUrl>
+    <Product>Revit -&gt; Three.js</Product>
     <Version>0.1.0</Version>
     <NeutralLanguage>en</NeutralLanguage>
+    <Copyright>Copyright © 2020 CODECAVE LLC - All Rights Reserved</Copyright>
   </PropertyGroup>
 
   <Target Name="CreateAddinManifest" AfterTargets="AfterBuild">

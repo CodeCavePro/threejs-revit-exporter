@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Autodesk.Revit.DB;
+using Autodesk.Revit.DB.Lighting;
 using CodeCave.Threejs.Entities;
 using CodeCave.Threejs.Revit.Exporter.Helpers;
 
@@ -25,7 +26,6 @@ namespace CodeCave.Threejs.Revit.Exporter
         ///     Initializes a new instance of the <see cref="ObjectSceneExportContext" /> class.
         /// </summary>
         /// <param name="document">The document.</param>
-        /// <param name="outputJsonFile">Optional output JSON file.</param>
         /// <exception cref="System.ArgumentException">document.</exception>
         /// <exception cref="System.ArgumentNullException">
         ///     document
@@ -42,6 +42,8 @@ namespace CodeCave.Threejs.Revit.Exporter
 
             Reset();
         }
+
+        public bool Optimize { get; set; }
 
         public ObjectSceneExportContext Reset()
         {
@@ -79,6 +81,8 @@ namespace CodeCave.Threejs.Revit.Exporter
         /// <returns></returns>
         public RenderNodeAction OnViewBegin(ViewNode node)
         {
+            node.LevelOfDetail = 5;
+
             // just go on with export
             return RenderNodeAction.Proceed;
         }
@@ -87,7 +91,6 @@ namespace CodeCave.Threejs.Revit.Exporter
         ///     This method marks the end of a 3D view being exported.
         /// </summary>
         /// <param name="elementId">The element identifier.</param>
-        /// <exception cref="InvalidDataException"></exception>
         public void OnViewEnd(ElementId elementId)
         {
             try
@@ -110,12 +113,12 @@ namespace CodeCave.Threejs.Revit.Exporter
                     return;
                 }
 
-                foreach (var material in current.VerticesCache.Keys.ToList())
+                foreach (var materialId in current.VerticesCache.Keys.ToList())
                 {
-                    var obj = current.ObjectCache[material];
-                    var geo = current.GeometryCache[material];
+                    var obj = current.ObjectCache[materialId];
+                    var geo = current.GeometryCache[materialId];
 
-                    foreach (var p in current.VerticesCache[material])
+                    foreach (var p in current.VerticesCache[materialId])
                     {
                         geo.AddPoint(p);
                     }
@@ -138,7 +141,6 @@ namespace CodeCave.Threejs.Revit.Exporter
         /// </summary>
         /// <param name="elementId">The element identifier.</param>
         /// <returns></returns>
-        /// <exception cref="InvalidDataException"></exception>
         public RenderNodeAction OnElementBegin(ElementId elementId)
         {
             if (elementId is null)
@@ -151,8 +153,8 @@ namespace CodeCave.Threejs.Revit.Exporter
                 if (element is null || string.IsNullOrWhiteSpace(uid))
                     throw new InvalidDataException();
 
-                if (!(element is FamilyInstance))
-                    return RenderNodeAction.Skip; // simply skip non-FamilyInstance elements
+                //if (element is Autodesk.Revit.DB.Group || element is Level)
+                //    return RenderNodeAction.Skip;
 
                 Debug.WriteLine($"OnElementBegin: id {elementId.IntegerValue} category {element.Category?.Name} name {element.Name}");
 
@@ -210,8 +212,8 @@ namespace CodeCave.Threejs.Revit.Exporter
                 if (element is null || string.IsNullOrWhiteSpace(uid))
                     throw new InvalidDataException();
 
-                if (!(element is FamilyInstance))
-                    return; // simply skip non-FamilyInstance elements
+                //if (element is Autodesk.Revit.DB.Group || element is Level)
+                //    return;
 
                 Debug.WriteLine($"OnElementEnd: id {elementId.IntegerValue} category {element.Category.Name} name {element.Name}");
 
@@ -227,12 +229,12 @@ namespace CodeCave.Threejs.Revit.Exporter
                     return;
                 }
 
-                foreach (var material in current.VerticesCache.Keys.ToArray())
+                foreach (var materialId in current.VerticesCache.Keys.ToArray())
                 {
-                    var obj = current.ObjectCache[material];
-                    var geo = current.GeometryCache[material];
+                    var obj = current.ObjectCache[materialId];
+                    var geo = current.GeometryCache[materialId];
 
-                    foreach (var p in current.VerticesCache[material])
+                    foreach (var p in current.VerticesCache[materialId])
                     {
                         geo.AddPoint(p);
                     }
@@ -240,6 +242,37 @@ namespace CodeCave.Threejs.Revit.Exporter
                     obj.GeometryUuid = geo.Uuid;
                     outputScene.AddGeometry(geo);
                     current.Element.AddChild(obj);
+                }
+
+                if (element is FamilyInstance familyInstance &&
+                    (familyInstance.Symbol.FamilyName.IndexOf("QF_", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    familyInstance.Symbol.FamilyName.IndexOf("VR_", StringComparison.OrdinalIgnoreCase) >= 0))
+                {
+                    var builtInParams = new List<BuiltInParameter>
+                        {
+                            BuiltInParameter.ALL_MODEL_MANUFACTURER,
+                            BuiltInParameter.ALL_MODEL_MODEL,
+                            BuiltInParameter.ALL_MODEL_DESCRIPTION,
+                            BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS,
+                            BuiltInParameter.ALL_MODEL_TYPE_COMMENTS,
+                        }
+                        .Select(p => familyInstance.Symbol.get_Parameter(p) ?? familyInstance.get_Parameter(p))
+                        .Select(p => new { p?.Definition?.Name, Value = p?.StorageType == StorageType.String ? p?.AsString() : p?.AsValueString() })
+                        .Where(i => !string.IsNullOrWhiteSpace(i.Value))
+                        .ToDictionary(p => p.Name, p => p.Value);
+
+                    var sharedParams = element.Parameters
+                        .OfType<Parameter>()
+                        .Where(p => p.IsShared && !p.Definition.Name.StartsWith("Specifi_", StringComparison.OrdinalIgnoreCase))
+                        .Select(p => new { p?.Definition?.Name, Value = p?.StorageType == StorageType.String ? p?.AsString() : p?.AsValueString() })
+                        .Where(i => !string.IsNullOrWhiteSpace(i.Value))
+                        .OrderBy(p => p.Name)
+                        .ToDictionary(p => p.Name, p => p.Value);
+
+                    current.Element.UserData = current.Element.UserData
+                        .Concat(builtInParams)
+                        .Concat(sharedParams)
+                        .ToDictionary(p => p.Key, p => p.Value);
                 }
 
                 outputScene.Object.AddChild(current.Element);
@@ -351,6 +384,7 @@ namespace CodeCave.Threejs.Revit.Exporter
         /// <param name="node">The light node.</param>
         public void OnLight(LightNode node)
         {
+            node.ToString();
             // do nothing, light export is not supported
         }
 
@@ -388,6 +422,9 @@ namespace CodeCave.Threejs.Revit.Exporter
         /// <param name="node">The polymesh node.</param>
         public void OnPolymesh(PolymeshTopology node)
         {
+            if (node is null)
+                throw new ArgumentNullException(nameof(node));
+
             try
             {
                 var points = node
@@ -403,6 +440,14 @@ namespace CodeCave.Threejs.Revit.Exporter
                         current.VerticesPerMaterial.AddVertex(points[facet.V1].ToVector3()),
                         current.VerticesPerMaterial.AddVertex(points[facet.V2].ToVector3()),
                         current.VerticesPerMaterial.AddVertex(points[facet.V3].ToVector3()),
+                    });
+                }
+
+                foreach (var uv in node.GetUVs())
+                {
+                    current.GeometryPerMaterial.AddUVs(new[] {
+                        uv.U,
+                        uv.V,
                     });
                 }
             }
@@ -422,7 +467,8 @@ namespace CodeCave.Threejs.Revit.Exporter
             if (outputScene is null)
                 throw new InvalidOperationException("The export cannot be finalized if the scene is null");
 
-            outputScene.Optimize(true);
+            if (Optimize)
+                outputScene.Optimize(true);
         }
 
         /// <summary>

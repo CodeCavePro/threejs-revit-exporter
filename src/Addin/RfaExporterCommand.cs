@@ -12,7 +12,7 @@ namespace CodeCave.Threejs.Revit.Exporter.Addin
     /// <seealso cref="IExternalCommand" />
     [Transaction(TransactionMode.Manual)]
     [Regeneration(RegenerationOption.Manual)]
-    public class ExporterCommand : IExternalCommand
+    public class RfaExporterCommand : IExternalCommand
     {
         /// <summary>
         /// Executes the specified Revit command <see cref="ExternalCommand"/>.
@@ -56,7 +56,7 @@ namespace CodeCave.Threejs.Revit.Exporter.Addin
                     if (!File.Exists(rfaPath))
                         continue;
 
-                    exporter.ExportFile(docWrapper, viewType3D, rfaPath);
+                    exporter.ExportRfaFile(docWrapper, viewType3D, rfaPath);
                 }
             }
 

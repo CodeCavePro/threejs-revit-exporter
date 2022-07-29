@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.Structure;
+using Autodesk.Revit.UI;
 
 namespace CodeCave.Threejs.Revit.Exporter
 {
@@ -48,7 +49,7 @@ namespace CodeCave.Threejs.Revit.Exporter
 
         #endregion Events
 
-        public void ExportFile(Document docWrapper, View3D view3d, string rfaFilePath)
+        public void ExportRfaFile(Document docWrapper, View3D view3d, string rfaFilePath)
         {
             if (docWrapper is null)
                 throw new ArgumentNullException(nameof(docWrapper));
@@ -117,7 +118,7 @@ namespace CodeCave.Threejs.Revit.Exporter
                     ShouldStopOnError = false,
                 })
                 {
-                    var objectScene = exporter.Export(view3d as View);
+                    var objectScene = exporter.ExportView(view3d as View);
                     var objectSceneJson = objectScene.ToString();
                     File.WriteAllText(outputFilePath, objectSceneJson);
                 }
@@ -144,6 +145,35 @@ namespace CodeCave.Threejs.Revit.Exporter
             }
 
             family.Dispose();
+        }
+
+        public void ExportRvtFile(UIApplication uiapp, string projectPath)
+        {
+            if (uiapp is null)
+                throw new ArgumentNullException(nameof(uiapp));
+
+            if (string.IsNullOrWhiteSpace(projectPath))
+                throw new ArgumentException($"Invalid project path '{projectPath}'.", nameof(projectPath));
+
+            var docWrapper = uiapp.OpenAndActivateDocument(projectPath).Document;
+            var viewType3D = docWrapper.CreateTweakedView3D();
+            uiapp.ActiveUIDocument.ActiveView = viewType3D;
+
+            var context = new ObjectSceneExportContext(docWrapper, viewType3D)
+            {
+                Optimize = false,
+            };
+
+            using var exporter = new ObjectSceneExporter(docWrapper, context)
+            {
+                ShouldStopOnError = false,
+            };
+
+            var objectScene = exporter.ExportView(viewType3D as View);
+            var objectSceneJson = objectScene.ToString();
+
+            var outputFilePath = Path.ChangeExtension(projectPath, ".json");
+            File.WriteAllText(outputFilePath, objectSceneJson);
         }
 
         protected virtual void OnExportStarted(FamilyExportEventArgs args)

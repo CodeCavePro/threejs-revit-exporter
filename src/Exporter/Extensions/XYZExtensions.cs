@@ -1,4 +1,4 @@
-﻿using Autodesk.Revit.DB;
+using Autodesk.Revit.DB;
 using CodeCave.Threejs.Entities;
 
 namespace CodeCave.Threejs.Revit.Exporter
