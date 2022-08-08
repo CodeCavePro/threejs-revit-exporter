@@ -18,10 +18,9 @@ namespace CodeCave.Threejs.Revit.Exporter
 
         /// <summary>Exports the specified view to export.</summary>
         /// <param name="viewToExport">The view to export.</param>
-        /// <returns></returns>
         /// <param name="outputJsonFilePath">The output JSON file path.</param>
         /// <exception cref="System.ArgumentException">Please provide a valid output file path. - outputJsonFilePath.</exception>
-        public bool Export(View3D viewToExport, string outputJsonFilePath)
+        public bool ExportToFile(View3D viewToExport, string outputJsonFilePath)
         {
             if (viewToExport is null)
             {
@@ -36,18 +35,12 @@ namespace CodeCave.Threejs.Revit.Exporter
             _ = new FileInfo(outputJsonFilePath); // throws an error if file path is invalid
 
             if (!TryExport(viewToExport, out var outputScene, throwException: true))
-                return false;
             {
+                return false;
             }
 
             File.WriteAllText(outputJsonFilePath, outputScene.ToString());
             return File.Exists(outputJsonFilePath);
-#if NET472 || NET48_OR_GREATER
-            Export(viewToExport);
-#else
-            Export(new System.Collections.Generic.List<ElementId> { viewToExport.Id });
-#endif
-            return context.GetResult();
         }
 
         /// <summary>Exports the specified view to export.</summary>
@@ -65,10 +58,14 @@ namespace CodeCave.Threejs.Revit.Exporter
                     throw new ArgumentNullException(nameof(viewToExport));
                 }
 
+#if NET472 || NET48_OR_GREATER
                 Export(viewToExport);
+#else
+                Export(new System.Collections.Generic.List<ElementId> { viewToExport.Id });
+#endif
 
                 outputScene = this.context.GetResult();
-                return outputScene?.Object?.Children?.Any() ?? false;
+                return outputScene?.Object != null;
             }
             catch (Exception) when (!throwException)
             {

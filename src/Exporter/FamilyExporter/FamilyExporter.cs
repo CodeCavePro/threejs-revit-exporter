@@ -172,7 +172,10 @@ namespace CodeCave.Threejs.Revit.Exporter
                 ShouldStopOnError = false,
             };
 
-            var objectScene = exporter.ExportView(viewType3D as View);
+            if (!exporter.TryExport(viewType3D, out var objectScene))
+            {
+                TaskDialog.Show("Error", $"Failed to export '{projectPath}'");
+            }
             var objectSceneJson = objectScene.ToString();
 
             var outputFilePath = Path.ChangeExtension(projectPath, ".json");
