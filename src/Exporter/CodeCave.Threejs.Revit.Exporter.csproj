@@ -22,6 +22,8 @@
 
   <PropertyGroup>
     <IsPackable>true</IsPackable>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <Version>0.1.4</Version>
     <FileVersion>0.1.4</FileVersion>
     <AssemblyVersion>0.1.4</AssemblyVersion>
