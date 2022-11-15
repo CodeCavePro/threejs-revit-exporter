@@ -26,9 +26,7 @@ steps:
   inputs:
     command: 'custom'
     custom: 'tool'
-    arguments: 'update -g gitversion.tool --version 5.5.*'
-
-
+    arguments: 'update -g gitversion.tool --version 5.11.*'
 
 - task: PowerShell@2
   displayName: 'Update build number and project version from GitVersion metadata'
@@ -41,7 +39,6 @@ steps:
     command: 'build'
     projects: '*.sln'
     arguments: '--configuration Debug'
-
 
 - task: DotNetCoreCLI@2
   displayName: 'Testing the solution'
