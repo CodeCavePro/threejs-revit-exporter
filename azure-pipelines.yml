@@ -86,7 +86,7 @@ steps:
   displayName: 'Build the solution'
   inputs:
     command: 'build'
-    projects: '**/*.sln'
+    projects: '**/*.csproj'
     arguments: '--configuration Debug'
 
 
