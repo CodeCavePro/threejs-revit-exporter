@@ -23,8 +23,12 @@ namespace CodeCave.Threejs.Revit.Exporter.Addin
         /// </summary>
         public RibbonButton()
         {
+            var thisNamespace = GetType().Namespace;
             commandAssemly = typeof(T).Assembly;
-            rootNameSpace = typeof(T).Assembly.ManifestModule.GetTypes().Min(t => t.Namespace);
+            rootNameSpace = typeof(T).Assembly.ManifestModule
+                .GetTypes()
+                .Where(t => t.Namespace is not null && t.Namespace.StartsWith(thisNamespace, StringComparison.OrdinalIgnoreCase))
+                .Min(t => t.Namespace) ?? thisNamespace;
         }
 
         /// <inheritdoc />

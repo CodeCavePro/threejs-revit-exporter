@@ -75,11 +75,13 @@ namespace CodeCave.Threejs.Revit.Exporter
 
             if (family is null)
             {
-                using var t = new Transaction(docWrapper, $"Load the family '{familyName}'");
-                t.Start();
+                using var tr = new Transaction(docWrapper, $"Load the family '{familyName}'");
+                tr.Start();
+
                 if (!docWrapper.LoadFamily(rfaFilePath, out family))
                     throw new InvalidOperationException();
-                t.Commit();
+
+                tr.Commit();
             }
 
             foreach (var typElementId in family.GetFamilySymbolIds())
@@ -95,8 +97,8 @@ namespace CodeCave.Threejs.Revit.Exporter
                 var familyTypeExportArgs = new FamilySymbolExportEventArgs { FamilyFilePath = rfaFilePath, Symbol = familySymbol?.Name, OutputFilePath = outputFilePath };
                 this?.OnSymbolExportStarted(familyTypeExportArgs);
 
-                if (string.IsNullOrWhiteSpace(outputFilePath) || File.Exists(outputFilePath))
-                    continue;
+                if (string.IsNullOrWhiteSpace(outputFilePath))
+                    throw new InvalidDataException();
 
                 using (var t = new Transaction(docWrapper, $"Placing family instance '{familySymbol.Name}'"))
                 {
@@ -109,6 +111,7 @@ namespace CodeCave.Threejs.Revit.Exporter
                         familySymbol,
                         StructuralType.NonStructural);
 
+                    docWrapper.Regenerate();
                     t.Commit();
                 }
 
@@ -128,26 +131,78 @@ namespace CodeCave.Threejs.Revit.Exporter
 
                 this?.OnSymbolExportEnded(familyTypeExportArgs);
 
-                using (var t = new Transaction(docWrapper, $"Remove family symbol '{familyInstance.Name}'"))
-                {
-                    t.Start();
-                    docWrapper.Delete(familySymbol.Id);
-                    t.Commit();
-                }
+                using var tr2 = new Transaction(docWrapper, $"Remove family symbol '{familyInstance.Name}'");
+                tr2.Start();
+                docWrapper.Delete(familySymbol.Id);
+                tr2.Commit();
 
                 familyInstance.Dispose();
             }
 
             this?.OnExportEnded(familyExportArgs);
 
-            using (var t = new Transaction(docWrapper, $"Remove family '{family.Name}'"))
-            {
-                t.Start();
-                docWrapper.Delete(family.Id);
-                t.Commit();
-            }
+            using var td = new Transaction(docWrapper, $"Remove family '{family.Name}'");
+            td.Start();
+            docWrapper.Delete(family.Id);
+            td.Commit();
 
             family.Dispose();
+        }
+
+        private void HideClearances(View3D view3D)
+        {
+            var specialtyEquipmentCategory = view3D.Document.Settings.Categories.get_Item(BuiltInCategory.OST_SpecialityEquipment);
+            var specialtySubcats = specialtyEquipmentCategory.SubCategories.Cast<Category>().ToList();
+            var clearanceSubCategories = specialtySubcats.Where(s => s.Name.ToUpperInvariant().Contains("CLEARANCE")).ToArray();
+
+            if (clearanceSubCategories.Any())
+            {
+                using var subTransaction = new SubTransaction(view3D.Document);
+                subTransaction.Start();
+
+                try
+                {
+                    foreach (Category category in clearanceSubCategories.OfType<Category>())
+                    {
+                        if (category.get_AllowsVisibilityControl(view3D))
+                            category.set_Visible(view3D, false);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // TODO add logging
+                }
+
+                subTransaction.Commit();
+            }
+
+            foreach (var specialtySubCategory in specialtySubcats)
+                specialtySubCategory.Dispose();
+
+            specialtyEquipmentCategory?.Dispose();
+        }
+
+        private FamilyInstance InsertFamilySymbol(FamilySymbol familySymbol)
+        {
+            // TODO add logging
+            // logger.LogInformation($"Placing family instance '{familySymbol.Name}' in XYZ(0,0,0)");
+
+            var docWrapper = familySymbol.Family.Document;
+            using var subTransaction = new SubTransaction(docWrapper);
+            subTransaction.Start();
+
+            if (!familySymbol.IsActive)
+                familySymbol.Activate();
+
+            var familyInstance = docWrapper.Create.NewFamilyInstance(
+                XYZ.Zero,
+                familySymbol,
+                StructuralType.NonStructural
+            );
+
+            subTransaction.Commit();
+
+            return familyInstance;
         }
 
         public void ExportRvtFile(UIApplication uiapp, string projectPath)
@@ -176,8 +231,8 @@ namespace CodeCave.Threejs.Revit.Exporter
             {
                 TaskDialog.Show("Error", $"Failed to export '{projectPath}'");
             }
-            var objectSceneJson = objectScene.ToString();
 
+            var objectSceneJson = objectScene.ToString();
             var outputFilePath = Path.ChangeExtension(projectPath, ".json");
             File.WriteAllText(outputFilePath, objectSceneJson);
         }

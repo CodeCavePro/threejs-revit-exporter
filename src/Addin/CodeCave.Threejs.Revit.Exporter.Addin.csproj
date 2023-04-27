@@ -27,7 +27,7 @@
          e.g. if you want to debug ONLY Revit 2019,
          put net47 below and switch to 'Debug One' configuration
       -->
-    <TargetFrameworks>net471</TargetFrameworks>
+    <TargetFrameworks>net48</TargetFrameworks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(TargetFramework)' == 'net40' ">
     <RevitVersion>2014</RevitVersion>
@@ -98,6 +98,7 @@
     <PackageReference Include="Autodesk.Revit.SDK" Version="2019.*" Condition=" '$(RevitVersion)' == '2019' " PrivateAssets="All" />
     <PackageReference Include="Autodesk.Revit.SDK" Version="2020.*" Condition=" '$(RevitVersion)' == '2020' " PrivateAssets="All" />
     <PackageReference Include="Autodesk.Revit.SDK" Version="2021.*" Condition=" '$(RevitVersion)' == '2021' " PrivateAssets="All" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="3.1.*" />
   </ItemGroup>
   <Target Name="PreventRevitSDKCopyLocal" AfterTargets="ResolveReferences">
     <ItemGroup>
@@ -126,6 +127,11 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AlwaysOverwriteFamilyLoadOptions.cs" />
+    <Compile Include="Extensions\DocumentExtension.cs" />
+    <Compile Include="FamilyExportEventArgs.cs" />
+    <Compile Include="FamilySymbolExportEventArgs.cs" />
+    <Compile Include="HeadlessExporter.cs" />
     <Compile Include="RvtExporterCommand.cs" />
     <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="RfaExporterCommand.cs" />
@@ -134,11 +140,30 @@
     <Compile Include="Ribbon\RibbonHelper.cs" />
     <Compile Include="App.cs" />
     <Compile Include="ExternalCommand.cs" />
+    <Compile Include="Extensions\ColorExtensions.cs" />
+    <Compile Include="Extensions\DocumentTransactionExtension.cs" />
+    <Compile Include="Extensions\DoubleExtensions.cs" />
+    <Compile Include="Extensions\ElementCollectorExtension.cs" />
+    <Compile Include="Extensions\ElementExtensions.cs" />
+    <Compile Include="Extensions\EnumeratorExtensions.cs" />
+    <Compile Include="Extensions\ViewExtensions.cs" />
     <Compile Include="StringLocalizer.cs" />
+    <Compile Include="SuppressErrorsFailureHandler.cs" />
     <Compile Include="ZeroDocStateAvailability.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Exporter\CodeCave.Threejs.Revit.Exporter.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Update="Resources\ExportScene.rvt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Resources\FamilyTemplate.rft">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Resources\SpecifiLayersMap.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>
     <RootNamespace>CodeCave.Threejs.Revit.Exporter.Addin</RootNamespace>

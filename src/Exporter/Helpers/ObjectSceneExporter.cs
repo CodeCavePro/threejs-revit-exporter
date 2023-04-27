@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using System.Linq;
 using Autodesk.Revit.DB;
 using CodeCave.Threejs.Entities;
 
@@ -67,13 +66,9 @@ namespace CodeCave.Threejs.Revit.Exporter
                 outputScene = this.context.GetResult();
                 return outputScene?.Object != null;
             }
-            catch (Exception) when (!throwException)
+            catch when (!throwException)
             {
                 return false;
-            }
-            catch
-            {
-                throw;
             }
         }
     }

@@ -1,15 +1,15 @@
 <Project>
 
   <PropertyGroup>
-    <LangVersion>8.0</LangVersion>
+    <LangVersion>latest</LangVersion>
     <NetStandardVersion>netstandard2.1</NetStandardVersion>
-    <NetCoreAppVersion>netcoreapp3.1</NetCoreAppVersion>
+    <NetCoreAppVersion>net6.0</NetCoreAppVersion>
   </PropertyGroup>
 
   <PropertyGroup>
     <ResolveNuGetPackages>true</ResolveNuGetPackages>
-    <NetCorePackageVersion>3.1.3</NetCorePackageVersion>
-    <EFCorePackageVersion>3.1.3</EFCorePackageVersion>
+    <NetCorePackageVersion>6.0.*</NetCorePackageVersion>
+    <EFCorePackageVersion>6.0.*</EFCorePackageVersion>
   </PropertyGroup>
 
   <!-- Output-related settings -->

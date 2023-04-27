@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Autodesk.Revit.DB;
-using Autodesk.Revit.DB.Lighting;
 using CodeCave.Threejs.Entities;
 using CodeCave.Threejs.Revit.Exporter.Helpers;
 
@@ -128,7 +127,8 @@ namespace CodeCave.Threejs.Revit.Exporter
                     current.Element.AddChild(obj);
                 }
 
-                outputScene.Object.AddChild(current.Element);
+                if (current.Element is not null)
+                    outputScene.Object.AddChild(current.Element);
             }
             catch (Exception ex)
             {
@@ -152,9 +152,6 @@ namespace CodeCave.Threejs.Revit.Exporter
                 var uid = element?.UniqueId;
                 if (element is null || string.IsNullOrWhiteSpace(uid))
                     throw new InvalidDataException();
-
-                //if (element is Autodesk.Revit.DB.Group || element is Level)
-                //    return RenderNodeAction.Skip;
 
                 Debug.WriteLine($"OnElementBegin: id {elementId.IntegerValue} category {element.Category?.Name} name {element.Name}");
 
@@ -212,8 +209,8 @@ namespace CodeCave.Threejs.Revit.Exporter
                 if (element is null || string.IsNullOrWhiteSpace(uid))
                     throw new InvalidDataException();
 
-                //if (element is Autodesk.Revit.DB.Group || element is Level)
-                //    return;
+                if (element is Level) // Skip levels
+                    return;
 
                 Debug.WriteLine($"OnElementEnd: id {elementId.IntegerValue} category {element.Category.Name} name {element.Name}");
 

@@ -33,7 +33,7 @@
 
   <!-- FxCop Analyzer-related configuration -->
   <ItemGroup Condition="'$(BuildingInsideVisualStudio)' == 'true'">
-    <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="3.0.0*">
+    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.*">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
@@ -49,7 +49,7 @@
 
   <!-- Sonar Analyzer-related configuration -->
   <ItemGroup Condition="'$(BuildingInsideVisualStudio)' == 'true'">
-    <PackageReference Include="SonarAnalyzer.CSharp" Version="8.6.*">
+    <PackageReference Include="SonarAnalyzer.CSharp" Version="9.0.*">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
@@ -57,7 +57,7 @@
 
   <!-- Code Analyzers for projects using xUnit.net that help find and fix frequent issues when writing tests -->
   <ItemGroup Condition="'$(BuildingInsideVisualStudio)' == 'true' And '$(IsTestProject)' == 'true'">
-    <PackageReference Include="xunit.analyzers" Version="0.10.0">
+    <PackageReference Include="xunit.analyzers" Version="1.1.*">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>

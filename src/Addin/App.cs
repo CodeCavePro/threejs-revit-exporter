@@ -35,10 +35,7 @@ namespace CodeCave.Threejs.Revit.Exporter.Addin
         /// </summary>
         static App()
         {
-#if WINFORMS
-            System.Windows.Forms.Application.EnableVisualStyles();
-            System.Windows.Forms.Application.SetCompatibleTextRenderingDefault(false);
-#endif
+
         }
 
         /// <summary>

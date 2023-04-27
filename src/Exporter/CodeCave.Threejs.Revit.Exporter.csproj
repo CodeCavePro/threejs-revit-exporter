@@ -13,37 +13,24 @@
               2020  |  net472
               2021  |  net48
       -->
-    <TargetFrameworks>net48;net472;net471;net461</TargetFrameworks>
+    <TargetFrameworks>net48;net472;net471</TargetFrameworks>
   </PropertyGroup>
 
   <PropertyGroup Condition="$(Configuration.Contains('Debug'))">
-    <TargetFrameworks>net471</TargetFrameworks>
+    <TargetFrameworks>net48</TargetFrameworks>
   </PropertyGroup>
 
   <PropertyGroup>
     <IsPackable>true</IsPackable>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-    <Version>0.1.4</Version>
-    <FileVersion>0.1.4</FileVersion>
-    <AssemblyVersion>0.1.4</AssemblyVersion>
+    <Version>0.1.7</Version>
+    <FileVersion>0.1.7</FileVersion>
+    <AssemblyVersion>0.1.7</AssemblyVersion>
     <RepositoryType>git</RepositoryType>
     <PackageProjectUrl>https://github.com/CodeCavePro/threejs-revit-exporter.git</PackageProjectUrl>
     <RepositoryUrl>https://github.com/CodeCavePro/threejs-revit-exporter.git</RepositoryUrl>
     <PackageTags>nuget, package, library, three.js, revit, export</PackageTags>
-  </PropertyGroup>
-
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'net461' ">
-    <RevitVersion>2018</RevitVersion>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'net471' ">
-    <RevitVersion>2019</RevitVersion>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'net472' ">
-    <RevitVersion>2020</RevitVersion>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'net48' ">
-    <RevitVersion>2021</RevitVersion>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -53,8 +40,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CodeCave.Threejs.Entities" Version="[0.7.*, 0.8)" />
-    <PackageReference Include="Newtonsoft.Json" Version="[10.0.1, 13.1)" />
+    <PackageReference Include="Newtonsoft.Json" Version="[12.0.*, 13.1)" />
   </ItemGroup>
 
   <PropertyGroup Condition=" '$(TargetFramework)' == 'net40' ">
@@ -90,7 +76,11 @@
     <PackageReference Include="Autodesk.Revit.SDK" Version="2018.*" Condition=" '$(RevitVersion)' == '2018' " />
     <PackageReference Include="Autodesk.Revit.SDK" Version="2019.*" Condition=" '$(RevitVersion)' == '2019' " />
     <PackageReference Include="Autodesk.Revit.SDK" Version="2020.*" Condition=" '$(RevitVersion)' == '2020' " />
-    <PackageReference Include="Autodesk.Revit.SDK" Version="2021.*" Condition=" '$(RevitVersion)' == '2021' " />
+    <PackageReference Include="Autodesk.Revit.SDK" Version="(2021.*, 2025]" Condition=" '$(RevitVersion)' == '2021' " />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\threejs-entities\src\CodeCave.Threejs.Entities.csproj" />
   </ItemGroup>
 
 </Project>
