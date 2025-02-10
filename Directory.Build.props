@@ -3,13 +3,7 @@
   <PropertyGroup>
     <LangVersion>latest</LangVersion>
     <NetStandardVersion>netstandard2.1</NetStandardVersion>
-    <NetCoreAppVersion>net6.0</NetCoreAppVersion>
-  </PropertyGroup>
-
-  <PropertyGroup>
     <ResolveNuGetPackages>true</ResolveNuGetPackages>
-    <NetCorePackageVersion>6.0.*</NetCorePackageVersion>
-    <EFCorePackageVersion>6.0.*</EFCorePackageVersion>
   </PropertyGroup>
 
   <!-- Output-related settings -->
@@ -82,6 +76,7 @@
   <!-- Documentation-related settings -->
   <PropertyGroup>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
     <!--
     Make sure any documentation comments which are included in code get checked for syntax during the build, but do
     not report warnings for missing comments.
@@ -89,7 +84,7 @@
     CS1573: Parameter 'parameter' has no matching param tag in the XML comment for 'parameter' (but other parameters do)
     CS1591: Missing XML comment for publicly visible type or member 'Type_or_Member'
     -->
-    <NoWarn>$(NoWarn),1573,1591,1712</NoWarn>
+    <NoWarn>$(NoWarn);1573;1591;1712;MSB3253;MSB3277</NoWarn>
   </PropertyGroup>
 
 </Project>

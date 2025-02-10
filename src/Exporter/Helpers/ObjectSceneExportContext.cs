@@ -310,7 +310,7 @@ namespace CodeCave.Threejs.Revit.Exporter
             try
             {
                 Debug.WriteLine("  OnInstanceBegin: " + node.NodeName
-                                                      + " symbol: " + node.GetSymbolId().IntegerValue);
+                                                      + " symbol: " + node.GetSymbolGeometryId());
 
                 // This method marks the start of processing a family instance
                 transformations.Push(transformations.Peek().Multiply(
@@ -345,7 +345,7 @@ namespace CodeCave.Threejs.Revit.Exporter
             {
                 Debug.WriteLine("  OnLinkBegin: " + node.NodeName + " Document: " + node.GetDocument().Title +
                                 ": Id: " +
-                                node.GetSymbolId().IntegerValue);
+                                node.SymbolId.Value);
                 transformations.Push(transformations.Peek().Multiply(node.GetTransform()));
             }
             catch (Exception ex)

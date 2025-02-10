@@ -33,7 +33,7 @@
 
   <!-- FxCop Analyzer-related configuration -->
   <ItemGroup Condition="'$(BuildingInsideVisualStudio)' == 'true'">
-    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.*">
+    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.11.*">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
@@ -49,7 +49,7 @@
 
   <!-- Sonar Analyzer-related configuration -->
   <ItemGroup Condition="'$(BuildingInsideVisualStudio)' == 'true'">
-    <PackageReference Include="SonarAnalyzer.CSharp" Version="9.0.*">
+    <PackageReference Include="SonarAnalyzer.CSharp" Version="10.6.*">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>

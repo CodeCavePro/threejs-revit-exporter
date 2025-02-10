@@ -1,68 +1,20 @@
-<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
-    <Configurations>Debug;Release</Configurations>
-  </PropertyGroup>
-  <PropertyGroup>
-    <!-- Please remove the targets you don't need in order
-      to exclude Revit versions your add-in won't support
-      use the list below for matching Revit version with .NET target
-              2014  |  net40
-              2015  |  net45
-              2016  |  net451
-              2017  |  net452
-              2018  |  net46
-              2019  |  net47
-              2020  |  net471
-              2021  |  net48
-      For example you can exclude Revit 2014, by simply removing net40 target belows
-      -->
-    <TargetFrameworks>net48;net471;net47;net461</TargetFrameworks>
-    <RuntimeIdentifiers>win</RuntimeIdentifiers>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
-    <!-- You could debug just ONE addin version,
-         instead of building all the versions above.
-         Just put ONE target from the list above
-         e.g. if you want to debug ONLY Revit 2019,
-         put net47 below and switch to 'Debug One' configuration
-      -->
-    <TargetFrameworks>net48</TargetFrameworks>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'net40' ">
-    <RevitVersion>2014</RevitVersion>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'net45' ">
-    <RevitVersion>2015</RevitVersion>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'net451' ">
-    <RevitVersion>2016</RevitVersion>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'net452' ">
-    <RevitVersion>2017</RevitVersion>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'net461' ">
-    <RevitVersion>2018</RevitVersion>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'net47' ">
-    <RevitVersion>2019</RevitVersion>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'net471' ">
-    <RevitVersion>2020</RevitVersion>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'net48' ">
-    <RevitVersion>2021</RevitVersion>
-  </PropertyGroup>
-  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <OutputType>library</OutputType>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+
     <!-- Forcibly set platform to 'x64' and ignore architecture-related problems -->
+    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
+    <Platforms>x64</Platforms>
     <PlatformTarget>x64</PlatformTarget>
 
-    <ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
     <!-- Force the project to use the legacy debugger engine -->
     <DebugEngines>{351668CC-8477-4fbf-BFE3-5F1006E4DB1F}</DebugEngines>
-    <!-- Invert the behavior of new .csproj format - exclude files by default -->
-    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
-    <EnableDefaultItems>false</EnableDefaultItems>
     <!-- Define handy symbols to use in the code in order to accommodate different Revit versions,
     e.g. by wrapping legacy / deprecated API calls with #if REVIT2014 | REVIT2015 -->
     <DefineConstants>REVIT$(RevitVersion);WINFORMS</DefineConstants>
@@ -73,39 +25,13 @@
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <OutputPath>..\bin\$(Configuration)\$(RevitVersion)</OutputPath>
   </PropertyGroup>
+
   <PropertyGroup Condition="$(Configuration.Contains('Debug'))">
     <DefineConstants>$(DefineConstants);DEBUG</DefineConstants>
     <DebugType>full</DebugType>
     <OutputPath>..\..\bin\Debug\$(RevitVersion)</OutputPath>
   </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="GS.Revit.GltfExporterAPI">
-      <HintPath>C:\ProgramData\Autodesk\ApplicationPlugins\glTF ExporterAPI.bundle\Contents\2021\glTF Exporter + API\GS.Revit.GltfExporterAPI.dll</HintPath>
-    </Reference>
-    <Reference Include="PresentationCore" />
-    <Reference Include="PresentationFramework" />
-    <Reference Include="WindowsBase" />
-  </ItemGroup>
-  <ItemGroup Condition="$(DefineConstants.Contains('WINFORMS'))">
-    <Reference Include="System.Windows.Forms" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Autodesk.Revit.SDK" Version="2014.*" Condition=" '$(RevitVersion)' == '2014' " PrivateAssets="All" />
-    <PackageReference Include="Autodesk.Revit.SDK" Version="2015.*" Condition=" '$(RevitVersion)' == '2015' " PrivateAssets="All" />
-    <PackageReference Include="Autodesk.Revit.SDK" Version="2016.*" Condition=" '$(RevitVersion)' == '2016' " PrivateAssets="All" />
-    <PackageReference Include="Autodesk.Revit.SDK" Version="2017.*" Condition=" '$(RevitVersion)' == '2017' " PrivateAssets="All" />
-    <PackageReference Include="Autodesk.Revit.SDK" Version="2018.*" Condition=" '$(RevitVersion)' == '2018' " PrivateAssets="All" />
-    <PackageReference Include="Autodesk.Revit.SDK" Version="2019.*" Condition=" '$(RevitVersion)' == '2019' " PrivateAssets="All" />
-    <PackageReference Include="Autodesk.Revit.SDK" Version="2020.*" Condition=" '$(RevitVersion)' == '2020' " PrivateAssets="All" />
-    <PackageReference Include="Autodesk.Revit.SDK" Version="2021.*" Condition=" '$(RevitVersion)' == '2021' " PrivateAssets="All" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="3.1.*" />
-  </ItemGroup>
-  <Target Name="PreventRevitSDKCopyLocal" AfterTargets="ResolveReferences">
-    <ItemGroup>
-      <!-- A temporary fix for Revit SDK files being copied to the output folder -->
-      <ReferenceCopyLocalPaths Remove="@(ReferenceCopyLocalPaths)" Condition="'%(ReferenceCopyLocalPaths.NuGetPackageId)' == 'Autodesk.Revit.SDK'" />
-    </ItemGroup>
-  </Target>
+
   <ItemGroup>
     <!-- Add-in manifest is processed via MSBuild -->
     <Content Include="AddinManifest.addin">
@@ -113,47 +39,15 @@
     </Content>
     <!-- Don't use standard resource generator, since it doesn't allow
          one to use strings containing spaces -->
-    <EmbeddedResource Include="Properties\Resources.resx">
-      <Generator />
-    </EmbeddedResource>
-    <EmbeddedResource Include="Properties\Resources.ru-RU.resx">
-      <Generator />
-    </EmbeddedResource>
     <EmbeddedResource Include="Resources\**\*.*">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <Generator />
     </EmbeddedResource>
-    <Content Include="Properties\launchSettings.json">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </Content>
   </ItemGroup>
-  <ItemGroup>
-    <Compile Include="AlwaysOverwriteFamilyLoadOptions.cs" />
-    <Compile Include="Extensions\DocumentExtension.cs" />
-    <Compile Include="FamilyExportEventArgs.cs" />
-    <Compile Include="FamilySymbolExportEventArgs.cs" />
-    <Compile Include="HeadlessExporter.cs" />
-    <Compile Include="RvtExporterCommand.cs" />
-    <Compile Include="GlobalSuppressions.cs" />
-    <Compile Include="RfaExporterCommand.cs" />
-    <Compile Include="Ribbon\RibbonButton.cs" />
-    <Compile Include="Ribbon\RibbonButton{T}.cs" />
-    <Compile Include="Ribbon\RibbonHelper.cs" />
-    <Compile Include="App.cs" />
-    <Compile Include="ExternalCommand.cs" />
-    <Compile Include="Extensions\ColorExtensions.cs" />
-    <Compile Include="Extensions\DocumentTransactionExtension.cs" />
-    <Compile Include="Extensions\DoubleExtensions.cs" />
-    <Compile Include="Extensions\ElementCollectorExtension.cs" />
-    <Compile Include="Extensions\ElementExtensions.cs" />
-    <Compile Include="Extensions\EnumeratorExtensions.cs" />
-    <Compile Include="Extensions\ViewExtensions.cs" />
-    <Compile Include="StringLocalizer.cs" />
-    <Compile Include="SuppressErrorsFailureHandler.cs" />
-    <Compile Include="ZeroDocStateAvailability.cs" />
-  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\Exporter\CodeCave.Threejs.Revit.Exporter.csproj" />
   </ItemGroup>
+
   <ItemGroup>
     <EmbeddedResource Update="Resources\ExportScene.rvt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -165,6 +59,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedResource>
   </ItemGroup>
+
   <PropertyGroup>
     <RootNamespace>CodeCave.Threejs.Revit.Exporter.Addin</RootNamespace>
     <AssemblyName>Threejs.Exporter.Addin</AssemblyName>
