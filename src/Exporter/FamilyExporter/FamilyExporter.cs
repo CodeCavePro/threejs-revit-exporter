@@ -49,7 +49,7 @@ namespace CodeCave.Threejs.Revit.Exporter
 
         #endregion Events
 
-        public void ExportRfaFile(Document docWrapper, View3D view3d, string rfaFilePath)
+        public void ExportRfaFile(Document docWrapper, View3D view3d, string rfaFilePath, int levelOfDetail = 15)
         {
             if (docWrapper is null)
                 throw new ArgumentNullException(nameof(docWrapper));
@@ -115,7 +115,7 @@ namespace CodeCave.Threejs.Revit.Exporter
                     t.Commit();
                 }
 
-                var context = new ObjectSceneExportContext(docWrapper, view3d);
+                var context = new ObjectSceneExportContext(docWrapper, view3d, levelOfDetail);
                 using var exporter = new ObjectSceneExporter(docWrapper, context)
                 {
                     ShouldStopOnError = false,
@@ -205,7 +205,7 @@ namespace CodeCave.Threejs.Revit.Exporter
             return familyInstance;
         }
 
-        public void ExportRvtFile(UIApplication uiapp, string projectPath)
+        public void ExportRvtFile(UIApplication uiapp, string projectPath, int levelOfDetail = 15)
         {
             if (uiapp is null)
                 throw new ArgumentNullException(nameof(uiapp));
@@ -217,7 +217,7 @@ namespace CodeCave.Threejs.Revit.Exporter
             var viewType3D = docWrapper.CreateTweakedView3D();
             uiapp.ActiveUIDocument.ActiveView = viewType3D;
 
-            var context = new ObjectSceneExportContext(docWrapper, viewType3D)
+            var context = new ObjectSceneExportContext(docWrapper, viewType3D, levelOfDetail)
             {
                 Optimize = false,
             };

@@ -13,7 +13,7 @@ namespace CodeCave.Threejs.Revit.Exporter
     {
         private readonly Document document;
         private readonly View3D view3D;
-
+        private readonly int levelOfDetail;
         private bool isDisposed; // To detect redundant calls
 
         private CurrentSet current;
@@ -31,13 +31,17 @@ namespace CodeCave.Threejs.Revit.Exporter
         ///     or
         ///     outputFile.
         /// </exception>
-        public ObjectSceneExportContext(Document document, View3D view3D)
+        public ObjectSceneExportContext(Document document, View3D view3D, int levelOfDetail = 15)
         {
+            if (levelOfDetail < 1 && levelOfDetail > 15)
+                throw new ArgumentException("Please use a valid level of detail for exporter (between 1 and 15, both included).", nameof(levelOfDetail));
+
             if (document?.IsFamilyDocument ?? false)
                 throw new ArgumentException("Please make sure you wrap families into a project-type document.", nameof(document));
 
             this.document = document ?? throw new ArgumentNullException(nameof(document));
             this.view3D = view3D;
+            this.levelOfDetail = levelOfDetail;
 
             Reset();
         }
@@ -80,7 +84,7 @@ namespace CodeCave.Threejs.Revit.Exporter
         /// <returns></returns>
         public RenderNodeAction OnViewBegin(ViewNode node)
         {
-            node.LevelOfDetail = 5;
+            node.LevelOfDetail = levelOfDetail;
 
             // just go on with export
             return RenderNodeAction.Proceed;

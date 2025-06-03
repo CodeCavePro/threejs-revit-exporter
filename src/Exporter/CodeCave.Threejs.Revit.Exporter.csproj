@@ -11,9 +11,9 @@
     <IncludeSymbols>true</IncludeSymbols>
     <DebugType>portable</DebugType>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-    <Version>0.2.0</Version>
-    <FileVersion>0.2.0</FileVersion>
-    <AssemblyVersion>0.2.0</AssemblyVersion>
+    <Version>0.2.1</Version>
+    <FileVersion>0.2.1</FileVersion>
+    <AssemblyVersion>0.2.1</AssemblyVersion>
     <RepositoryType>git</RepositoryType>
     <PackageProjectUrl>https://github.com/CodeCavePro/threejs-revit-exporter.git</PackageProjectUrl>
     <RepositoryUrl>https://github.com/CodeCavePro/threejs-revit-exporter.git</RepositoryUrl>

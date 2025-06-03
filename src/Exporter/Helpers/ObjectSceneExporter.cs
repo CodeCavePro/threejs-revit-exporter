@@ -19,7 +19,7 @@ namespace CodeCave.Threejs.Revit.Exporter
         /// <param name="viewToExport">The view to export.</param>
         /// <param name="outputJsonFilePath">The output JSON file path.</param>
         /// <exception cref="System.ArgumentException">Please provide a valid output file path. - outputJsonFilePath.</exception>
-        public bool ExportToFile(View3D viewToExport, string outputJsonFilePath)
+        public bool ExportToFile(View3D viewToExport, string outputJsonFilePath, int levelOfDetail)
         {
             if (viewToExport is null)
             {
